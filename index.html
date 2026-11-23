@@ -45,7 +45,7 @@ small{display:block;margin-top:18px;color:#bda8c5}
 .choices button[aria-pressed="true"]{background:#8a518a;box-shadow:0 0 0 2px #edb2e5 inset}
 .character[hidden]{display:none!important}
 .aelysia{width:220px;height:280px;position:relative;animation:aelysiaSway 2.5s ease-in-out infinite;transform-origin:50% 85%;filter:drop-shadow(0 8px 8px #100b1780)}
-.aelysia svg{width:100%;height:100%;overflow:visible}
+.aelysia img{display:block;width:100%;height:100%;object-fit:contain}
 @keyframes aelysiaSway{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){.aelysia{animation:none!important}}
 .aelysia-original{width:100%;height:100%;object-fit:contain;border-radius:12px}
@@ -57,54 +57,18 @@ small{display:block;margin-top:18px;color:#bda8c5}
 <p id="description">Mochi est prêt à danser !</p>
 <div class="choices" role="group" aria-label="Choisir un personnage">
 <button type="button" id="choose-mochi" aria-pressed="true">🐰 Mochi</button>
-<button type="button" id="choose-aelysia" aria-pressed="false">🌙 Aelysia</button>
+<button type="button" id="choose-aelysia" aria-pressed="false">🌙 Aelysia originale</button>
+<button type="button" id="choose-aelysia2" aria-pressed="false">✨ Aelysia 2.0</button>
 </div>
 <div class="scene" id="scene" aria-label="Un petit lapin rose danse doucement">
 <span class="sparkle s1" aria-hidden="true">🌸</span><span class="sparkle s2" aria-hidden="true">✨</span><span class="sparkle s3" aria-hidden="true">💜</span>
 <div class="mochi character" id="mochi" aria-hidden="true"><div class="head"><div class="ear left"></div><div class="ear right"></div><div class="eye left"></div><div class="eye right"></div><div class="blush left"></div><div class="blush right"></div><div class="mouth">ᴗ</div></div><div class="arm left"></div><div class="arm right"></div><div class="body"></div><div class="foot left"></div><div class="foot right"></div></div>
 <div class="aelysia character" id="aelysia" hidden aria-hidden="true">
-<img class="aelysia-original" src="Aelysia.png" alt="Aelysia, cheveux blonds et rouges, armure noire, épée et orbe astral" onload="this.nextElementSibling.hidden=true" onerror="this.hidden=true">
-<svg viewBox="0 0 240 310" role="img" aria-label="Aelysia, héroïne chibi aux cheveux blonds et rouges, portant une épée et un orbe magique">
-<defs>
-<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe1a1"/><stop offset="1" stop-color="#dc9b52"/></linearGradient>
-<linearGradient id="ruby" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff795b"/><stop offset="1" stop-color="#922b37"/></linearGradient>
-<radialGradient id="orb"><stop stop-color="#ff8bdc"/><stop offset=".4" stop-color="#9d3bdd"/><stop offset=".75" stop-color="#352071"/><stop offset="1" stop-color="#15152e"/></radialGradient>
-</defs>
-<!-- cape and flowing two-tone hair -->
-<path d="M86 168 Q33 184 12 259 L64 248 L81 281 L117 255 L171 277 L191 235 L225 256 Q207 188 156 169Z" fill="#331b32" stroke="#160e20" stroke-width="5"/>
-<path d="M116 43 Q22 35 29 160 Q24 214 55 224 L91 200 Q114 120 116 43Z" fill="url(#ruby)" stroke="#71303f" stroke-width="4"/>
-<path d="M108 38 Q214 12 216 140 Q236 203 192 231 L165 193 L143 117Z" fill="url(#gold)" stroke="#a36c3f" stroke-width="4"/>
-<!-- boots, body -->
-<path d="M83 215 L79 270 L112 274 L116 209 M129 210 L130 272 L166 273 L160 217" fill="#25202e" stroke="#14101a" stroke-width="7"/>
-<path d="M76 267 L115 266 L116 287 Q81 297 72 285Z M126 266 L167 266 L174 286 Q140 298 126 287Z" fill="#292530" stroke="#14101a" stroke-width="5"/>
-<path d="M75 173 Q119 155 164 173 L170 230 L143 240 L121 222 L98 241 L69 225Z" fill="#241f2b" stroke="#5e4155" stroke-width="5"/>
-<path d="M100 177 L122 209 L145 177 M121 204 L121 229" fill="none" stroke="#d59bb1" stroke-width="4"/>
-<path d="M118 179 l6 8 -6 8 -6 -8Z" fill="#f7d6e5"/>
-<!-- head and red-blonde fringe -->
-<ellipse cx="121" cy="110" rx="79" ry="73" fill="#ffd3ad" stroke="#9d6c68" stroke-width="4"/>
-<path d="M45 91 Q37 25 115 27 L121 70 Q102 82 90 107 L83 59 Q69 95 45 91Z" fill="url(#ruby)"/>
-<path d="M112 25 Q195 15 202 96 L174 77 L157 111 L148 67 L123 91 L118 60Z" fill="url(#gold)" stroke="#a97040" stroke-width="3"/>
-<!-- heterochromia -->
-<ellipse cx="88" cy="121" rx="15" ry="19" fill="#fb5365" stroke="#4f283b" stroke-width="3"/>
-<ellipse cx="153" cy="121" rx="15" ry="19" fill="#d454b6" stroke="#4f283b" stroke-width="3"/>
-<circle cx="92" cy="114" r="5" fill="#fff5f8"/><circle cx="157" cy="114" r="5" fill="#fff5f8"/>
-<ellipse cx="68" cy="147" rx="12" ry="6" fill="#ff9b9e" opacity=".7"/>
-<ellipse cx="173" cy="147" rx="12" ry="6" fill="#ff9b9e" opacity=".7"/>
-<path d="M109 150 Q121 161 134 150" fill="none" stroke="#9b5b62" stroke-width="3" stroke-linecap="round"/>
-<path d="M188 148 L194 155 L188 163" stroke="#a47daa" stroke-width="2" fill="none"/>
-<!-- arms, orb -->
-<path d="M79 184 Q56 202 46 218" fill="none" stroke="#24202d" stroke-width="21" stroke-linecap="round"/>
-<path d="M160 183 Q187 177 202 159" fill="none" stroke="#24202d" stroke-width="21" stroke-linecap="round"/>
-<circle cx="202" cy="146" r="13" fill="#ffd3ad" stroke="#9d6c68" stroke-width="3"/>
-<circle cx="202" cy="114" r="28" fill="url(#orb)" stroke="#713d91" stroke-width="4"/>
-<path d="M186 114 Q198 94 220 107 Q205 126 195 119" fill="none" stroke="#ed90de" stroke-width="3" stroke-linecap="round"/>
-<circle cx="214" cy="105" r="4" fill="#fff0ff"/>
-<!-- sword in left hand -->
-<path d="M42 218 L-8 302 L10 309 L60 237Z" fill="#35313e" stroke="#17141d" stroke-width="4"/>
-<path d="M16 267 L52 239" stroke="#aa859c" stroke-width="4"/>
-<path d="M18 218 L65 243 M36 251 L52 204" stroke="#27212e" stroke-width="13" stroke-linecap="round"/>
-<path d="M36 220 L47 231 L36 243 L25 231Z" fill="#e55c63"/>
-</svg></div>
+<img class="aelysia-original" src="Aelysia.png" alt="Aelysia originale, avec sa magie astrale">
+</div>
+<div class="aelysia character" id="aelysia2" hidden aria-hidden="true">
+<img class="aelysia-original" src="Aelysia2.0.png" alt="Aelysia 2.0 détourée, sur fond transparent">
+</div>
 </div>
 <button id="toggle" type="button" aria-pressed="false">⏸ Mettre en pause</button>
 <small>Animation douce, sans flash et sans son. Le bouton permet de tout arrêter.</small>
@@ -112,21 +76,34 @@ small{display:block;margin-top:18px;color:#bda8c5}
 <script>
 const scene=document.getElementById('scene');
 const toggle=document.getElementById('toggle');
-const mochi=document.getElementById('mochi');
-const aelysia=document.getElementById('aelysia');
-const mochiButton=document.getElementById('choose-mochi');
-const aelysiaButton=document.getElementById('choose-aelysia');
+const characters={
+ mochi:document.getElementById('mochi'),
+ aelysia:document.getElementById('aelysia'),
+ aelysia2:document.getElementById('aelysia2')
+};
+const buttons={
+ mochi:document.getElementById('choose-mochi'),
+ aelysia:document.getElementById('choose-aelysia'),
+ aelysia2:document.getElementById('choose-aelysia2')
+};
+const descriptions={
+ mochi:'Mochi est prêt à danser !',
+ aelysia:'Aelysia originale rejoint le bal !',
+ aelysia2:'Aelysia 2.0 danse sans son décor !'
+};
 const description=document.getElementById('description');
 function choose(character){
- const isMochi=character==='mochi';
- mochi.hidden=!isMochi;
- aelysia.hidden=isMochi;
- mochiButton.setAttribute('aria-pressed',String(isMochi));
- aelysiaButton.setAttribute('aria-pressed',String(!isMochi));
- description.textContent=isMochi?'Mochi est prêt à danser !':'Aelysia rejoint la danse avec sa magie astrale !';
+ for(const key of Object.keys(characters)){
+  const isSelected=key===character;
+  characters[key].hidden=!isSelected;
+  buttons[key].setAttribute('aria-pressed',String(isSelected));
+ }
+ description.textContent=descriptions[character];
+ scene.setAttribute('aria-label',descriptions[character]);
 }
-mochiButton.addEventListener('click',()=>choose('mochi'));
-aelysiaButton.addEventListener('click',()=>choose('aelysia'));
+for(const key of Object.keys(buttons)){
+ buttons[key].addEventListener('click',()=>choose(key));
+}
 toggle.addEventListener('click',()=>{
  const paused=scene.classList.toggle('paused');
  toggle.textContent=paused?'▶ Reprendre la danse':'⏸ Mettre en pause';
