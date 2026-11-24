@@ -445,21 +445,6 @@ lofiToggle.addEventListener('click',()=>{
  if(lofiEnabled&&ensureLofi())lofiContext.resume().catch(()=>{});
  syncLofi();
 });
-/* L'ambiance est activée dès l'ouverture. Si l'autoplay est bloqué,
-   le premier geste sur la page déverrouille l'audio sans second bouton. */
-if(ensureLofi()){
- syncLofi();
- lofiContext.resume().then(updateLofiStatus).catch(updateLofiStatus);
-}
-function unlockAmbience(event){
- if(!lofiEnabled||radioIsActive())return;
- if(event.target.closest&&event.target.closest('#radio,#lofi-toggle'))return;
- if(lofiContext&&lofiContext.state==='suspended'){
-  lofiContext.resume().then(()=>{syncLofi();updateLofiStatus();}).catch(updateLofiStatus);
- }
-}
-document.addEventListener('pointerdown',unlockAmbience,{passive:true});
-document.addEventListener('keydown',unlockAmbience);
 
 
 /* Bibliothèque construite à partir des noms exacts des fichiers du dépôt */
@@ -589,6 +574,23 @@ audio.addEventListener('error',()=>{
  syncLofi();
 });
 updateMusicUI();
+
+/* Ne lancer l'ambiance qu'après l'initialisation complète de la radio.
+   Les navigateurs peuvent imposer une interaction avant d'autoriser le son. */
+if(ensureLofi()){
+ syncLofi();
+ lofiContext.resume().then(()=>{syncLofi();}).catch(()=>{updateLofiStatus();});
+}
+function unlockAmbience(event){
+ if(!lofiEnabled||radioIsActive())return;
+ const target=event.target;
+ if(target&&target.closest&&target.closest('#radio,#lofi-toggle'))return;
+ if(lofiContext&&lofiContext.state==='suspended'){
+  lofiContext.resume().then(()=>{syncLofi();}).catch(()=>{updateLofiStatus();});
+ }
+}
+document.addEventListener('pointerdown',unlockAmbience,{passive:true});
+document.addEventListener('keydown',unlockAmbience);
 </script>
 </body>
 </html>
