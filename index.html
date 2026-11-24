@@ -78,9 +78,21 @@ small{display:block;margin-top:18px;color:#bda8c5}
 .clock-date{font-size:1.02rem;color:#f0d7ed;text-transform:capitalize}
 .clock-zone{font-size:.79rem;color:#ccb9d5;margin-top:7px}
 .clock-period{display:inline-block;margin-top:9px;padding:5px 12px;border-radius:999px;background:#51365f;color:#f9e4fc;font-size:.84rem}
+
+/* Easter egg du smiley DVD, doux et sans effets lumineux */
+#dvd-smiley{position:fixed;left:0;top:0;z-index:30;padding:8px 10px;border:1px solid #c89acb;border-radius:16px;background:#281b37e8;font-size:clamp(1.2rem,3.7vw,1.7rem);white-space:nowrap;line-height:1.3;cursor:pointer;will-change:transform;touch-action:manipulation;box-shadow:0 4px 14px #140e204d}
+#dvd-smiley .dvd-face{display:block;animation:dvd-turn 18s ease-in-out infinite alternate}
+#dvd-smiley:focus-visible{outline:3px solid #ffd6f9;outline-offset:3px}
+@keyframes dvd-turn{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+#smiley-rain{position:fixed;inset:0;z-index:40;overflow:hidden;pointer-events:none}
+.rain-face{position:absolute;top:-3.5rem;left:var(--rain-x);font-size:var(--rain-size);opacity:0;animation:smiley-fall var(--rain-duration) linear var(--rain-delay) 1 both}
+@keyframes smiley-fall{0%{transform:translate3d(0,-2rem,0) rotate(-12deg);opacity:0}10%{opacity:.75}88%{opacity:.75}100%{transform:translate3d(var(--rain-sway),105vh,0) rotate(12deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){#dvd-smiley .dvd-face,.rain-face{animation:none!important}.rain-face{opacity:.65;top:var(--rain-y)}}
 </style>
 </head>
 <body>
+<button id="dvd-smiley" type="button" aria-label="Smiley secret : clique sept fois pour une pluie de smileys" title="👁👄👁 — Clique sept fois !"><span class="dvd-face" aria-hidden="true">👁👄👁</span></button>
+<div id="smiley-rain" aria-hidden="true"></div>
 <main>
 <h1>🌸 Le petit bal de Fun 🌸</h1>
 <p id="description">Mochi est prêt à danser !</p>
@@ -591,6 +603,55 @@ function unlockAmbience(event){
 }
 document.addEventListener('pointerdown',unlockAmbience,{passive:true});
 document.addEventListener('keydown',unlockAmbience);
+
+/* Petit smiley à la DVD : 7 clics en 6 secondes déclenchent 7 secondes de pluie. */
+const dvdSmiley=document.getElementById('dvd-smiley');
+const smileyRain=document.getElementById('smiley-rain');
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+let dvdX=18,dvdY=110,dvdDX=0.45,dvdDY=0.34,dvdLast=0;
+let smileyClicks=0,smileyLastClick=0,smileyRaining=false;
+function dvdFrame(timestamp){
+ const elapsed=dvdLast?Math.min((timestamp-dvdLast)/16.67,2):1;
+ dvdLast=timestamp;
+ const maxX=Math.max(0,window.innerWidth-dvdSmiley.offsetWidth-4);
+ const maxY=Math.max(0,window.innerHeight-dvdSmiley.offsetHeight-4);
+ if(!reducedMotion.matches){
+  dvdX+=dvdDX*elapsed;
+  dvdY+=dvdDY*elapsed;
+  if(dvdX<=4||dvdX>=maxX){dvdDX*=-1;dvdX=Math.max(4,Math.min(maxX,dvdX));}
+  if(dvdY<=4||dvdY>=maxY){dvdDY*=-1;dvdY=Math.max(4,Math.min(maxY,dvdY));}
+ }else{
+  dvdX=Math.min(18,maxX);dvdY=Math.min(110,maxY);
+ }
+ dvdSmiley.style.transform='translate3d('+dvdX+'px,'+dvdY+'px,0)';
+ requestAnimationFrame(dvdFrame);
+}
+requestAnimationFrame(dvdFrame);
+function showerSmiley(){
+ if(smileyRaining)return;
+ smileyRaining=true;
+ smileyRain.replaceChildren();
+ const count=reducedMotion.matches?9:24;
+ for(let i=0;i<count;i++){
+  const face=document.createElement('span');
+  face.className='rain-face';
+  face.textContent='👁👄👁';
+  face.style.setProperty('--rain-x',(3+Math.random()*90).toFixed(1)+'%');
+  face.style.setProperty('--rain-y',(8+Math.random()*80).toFixed(1)+'%');
+  face.style.setProperty('--rain-size',(1.2+Math.random()*0.9).toFixed(2)+'rem');
+  face.style.setProperty('--rain-delay',(Math.random()*2.3).toFixed(2)+'s');
+  face.style.setProperty('--rain-duration',(4.1+Math.random()*0.6).toFixed(2)+'s');
+  face.style.setProperty('--rain-sway',(Math.random()*70-35).toFixed(0)+'px');
+  smileyRain.appendChild(face);
+ }
+ setTimeout(()=>{smileyRain.replaceChildren();smileyRaining=false;},7500);
+}
+dvdSmiley.addEventListener('click',()=>{
+ const now=Date.now();
+ smileyClicks=now-smileyLastClick>6000?1:smileyClicks+1;
+ smileyLastClick=now;
+ if(smileyClicks>=7){smileyClicks=0;showerSmiley();}
+});
 </script>
 </body>
 </html>
