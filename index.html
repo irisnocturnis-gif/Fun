@@ -41,6 +41,38 @@ small{display:block;margin-top:18px;color:#bda8c5}
 @keyframes drift{from{transform:translateY(0)}to{transform:translateY(-12px)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}}
 
+/* Mochi au pays des douceurs : dodo de minuit à 10 h, heure de Paris */
+.mochi .dream-bubble,.mochi .sleep-zz,.mochi .sleep-blanket{display:none}
+.mochi.sleeping{animation:mochi-breathe 4.5s ease-in-out infinite;transform-origin:50% 88%}
+.mochi.sleeping::before{content:"";position:absolute;left:0;top:175px;width:174px;height:51px;background:#be89c9;border-radius:50%;box-shadow:0 9px 0 #866196,0 14px 19px #110b1d77;z-index:-3}
+.mochi.sleeping .head{top:36px;transform:rotate(-9deg);border-radius:49% 49% 45% 48%}
+.mochi.sleeping .ear.left{transform:rotate(-37deg);top:-53px}
+.mochi.sleeping .ear.right{transform:rotate(36deg);top:-53px}
+.mochi.sleeping .eye{top:63px;width:24px;height:12px;background:transparent;border-bottom:4px solid #67426f;border-radius:0 0 50% 50%}
+.mochi.sleeping .eye.left{left:32px}.mochi.sleeping .eye.right{right:32px}
+.mochi.sleeping .blush{top:85px}
+.mochi.sleeping .mouth{top:80px;left:62px;font-size:18px;transform:rotate(8deg)}
+.mochi.sleeping .body{top:137px;transform:rotate(-9deg)}
+.mochi.sleeping .arm{animation:none;top:156px}
+.mochi.sleeping .arm.left{left:9px;transform:rotate(22deg)}
+.mochi.sleeping .arm.right{right:9px;transform:rotate(-22deg)}
+.mochi.sleeping .foot{animation:none;top:186px}
+.mochi.sleeping .sleep-blanket{display:block;position:absolute;left:22px;top:163px;width:136px;height:42px;background:linear-gradient(140deg,#b4a0e9,#8e77c7);border:4px solid #75589c;border-radius:42% 45% 36% 38%;box-shadow:inset 0 7px #d6c8ff88;z-index:2;transform:rotate(-3deg);pointer-events:none}
+.mochi.sleeping .sleep-blanket::after{content:"✦  ✧  ✦";position:absolute;left:28px;top:8px;color:#fff4c9;font-size:14px;letter-spacing:7px}
+.mochi.sleeping .sleep-zz{display:block;position:absolute;top:-22px;left:11px;font-size:22px;font-weight:800;color:#dfc4ff;text-shadow:0 2px 7px #1c1239;z-index:4;animation:mochi-zzz 5s ease-in-out infinite;pointer-events:none}
+.mochi.sleeping .dream-bubble{display:flex;position:absolute;right:-73px;top:-65px;align-items:center;justify-content:center;gap:3px;flex-wrap:wrap;width:141px;min-height:100px;padding:13px 12px;border:3px solid #d8b6e5;background:#fff2f9f2;border-radius:52% 48% 48% 52%;box-shadow:0 7px 22px #110b1f66,inset 0 0 0 3px #ffffffa6;z-index:5;pointer-events:none;animation:mochi-dream 6s ease-in-out infinite}
+.mochi.sleeping .dream-bubble::before,.mochi.sleeping .dream-bubble::after{content:"";position:absolute;background:#fff2f9;border:2px solid #d8b6e5;border-radius:50%}
+.mochi.sleeping .dream-bubble::before{width:19px;height:19px;bottom:-20px;left:17px}
+.mochi.sleeping .dream-bubble::after{width:10px;height:10px;bottom:-35px;left:4px}
+.dream-mochi{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:46% 46% 48% 48%;box-shadow:inset -4px -5px #00000013,0 3px 5px #71526c24;border:2px solid #e3cadb;font-size:17px;color:#67426f}
+.dream-mochi.strawberry{background:#ffb3cc}.dream-mochi.vanilla{background:#fffaf2}.dream-mochi.matcha{background:#cde8b2}
+.dream-mochi.big{width:44px;height:39px;background:#fbd1e0}
+.dream-label{width:100%;font-size:10px;font-weight:700;color:#865b89;letter-spacing:.03em}
+@keyframes mochi-breathe{0%,100%{transform:translateY(2px) scale(1)}50%{transform:translateY(-1px) scale(1.015)}}
+@keyframes mochi-zzz{0%,100%{opacity:.35;transform:translate(0,4px)}50%{opacity:1;transform:translate(5px,-5px)}}
+@keyframes mochi-dream{0%,100%{transform:translateY(2px)}50%{transform:translateY(-4px)}}
+@media(max-width:380px){.mochi.sleeping .dream-bubble{right:-54px;width:126px;padding:10px 7px}.dream-mochi{width:30px;height:30px}}
+
 .choices{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:18px 0 6px}
 .choices button[aria-pressed="true"]{background:#8a518a;box-shadow:0 0 0 2px #edb2e5 inset}
 .character[hidden]{display:none!important}
@@ -127,7 +159,7 @@ small{display:block;margin-top:18px;color:#bda8c5}
 </div>
 <div class="scene" id="scene" aria-label="Un petit lapin rose danse doucement">
 <span class="sparkle s1" aria-hidden="true">🌸</span><span class="sparkle s2" aria-hidden="true">✨</span><span class="sparkle s3" aria-hidden="true">💜</span>
-<div class="mochi character" id="mochi" aria-hidden="true"><div class="head"><div class="ear left"></div><div class="ear right"></div><div class="eye left"></div><div class="eye right"></div><div class="blush left"></div><div class="blush right"></div><div class="mouth">ᴗ</div></div><div class="arm left"></div><div class="arm right"></div><div class="body"></div><div class="foot left"></div><div class="foot right"></div></div>
+<div class="mochi character" id="mochi" aria-hidden="true"><div class="head"><div class="ear left"></div><div class="ear right"></div><div class="eye left"></div><div class="eye right"></div><div class="blush left"></div><div class="blush right"></div><div class="mouth">ᴗ</div></div><div class="arm left"></div><div class="arm right"></div><div class="body"></div><div class="foot left"></div><div class="foot right"></div><div class="sleep-blanket" aria-hidden="true"></div><div class="sleep-zz" aria-hidden="true">z Z z</div><div class="dream-bubble" aria-hidden="true"><span class="dream-label">Miam… des mochis !</span><span class="dream-mochi strawberry">♥</span><span class="dream-mochi vanilla">✿</span><span class="dream-mochi matcha">✦</span><span class="dream-mochi big">♡</span></div></div>
 <div class="aelysia character" id="aelysia" hidden aria-hidden="true">
 <img class="aelysia-original" src="Aelysia.png" alt="Aelysia originale, avec sa magie astrale">
 </div>
@@ -195,6 +227,16 @@ function updateClock(){
  clockTime.textContent=clockFormatter.format(now);
  clockTime.setAttribute('datetime',now.toISOString());
  clockDate.textContent=dateFormatter.format(now);
+ // Une plage horaire indépendante du lo-fi, calculée dans le fuseau de Paris.
+ const parisHour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',hourCycle:'h23'}).format(now));
+ const mochiAsleep=parisHour>=0&&parisHour<10;
+ const mochiEl=document.getElementById('mochi');
+ if(mochiEl)mochiEl.classList.toggle('sleeping',mochiAsleep);
+ const mochiDescription=mochiAsleep?'Mochi dort et rêve de délicieux mochis japonais… 💤':'Mochi est prêt à danser !';
+ if(document.getElementById('choose-mochi')?.getAttribute('aria-pressed')==='true'){
+  document.getElementById('description').textContent=mochiDescription;
+  document.getElementById('scene').setAttribute('aria-label',mochiDescription);
+ }
  const isNight=getAmbiencePeriod()==='night';
  clockPeriod.textContent=isNight?'🌙 Ambiance nocturne · 20 h – 7 h 30':'☀️ Ambiance de jour · 7 h 30 – 20 h';
 }
@@ -228,9 +270,9 @@ function choose(character){
   characters[key].hidden=!isSelected;
   buttons[key].setAttribute('aria-pressed',String(isSelected));
  }
- description.textContent=descriptions[character];
+ description.textContent=character==='mochi'&&characters.mochi.classList.contains('sleeping')?'Mochi dort et rêve de délicieux mochis japonais… 💤':descriptions[character];
  if(typeof onBalChoice==='function')onBalChoice(character==='bal');
- scene.setAttribute('aria-label',descriptions[character]);
+ scene.setAttribute('aria-label',description.textContent);
 }
 for(const key of Object.keys(buttons)){
  buttons[key].addEventListener('click',()=>choose(key));
