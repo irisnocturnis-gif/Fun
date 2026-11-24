@@ -93,7 +93,7 @@ small{display:block;margin-top:18px;color:#bda8c5}
 </div>
 </div>
 <button id="toggle" type="button" aria-pressed="false">⏸ Mettre en pause</button>
-<small>Animation douce, sans flash et sans son. Le bouton permet de tout arrêter.</small>
+<small>Animation douce et sans flash. Le bouton permet de mettre les personnages en pause.</small>
 
 
 <section class="ambience" aria-label="Ambiance lo-fi du petit bal">
@@ -275,6 +275,7 @@ let shuffleRemaining=[];
 let radioHistory=[];
 let radioHistoryPosition=-1;
 let playingRequested=false;
+let trackSwitchInProgress=false;
 audio.volume=0.6;
 function freshShuffle(except=-1){
  const ids=tracks.map((_,i)=>i).filter(i=>i!==except);
@@ -298,6 +299,7 @@ function updateMusicUI(){
 function loadTrack(index,autoplay=false,recordRadio=true){
  if(index<0||index>=tracks.length)return;
  trackIndex=index;
+ trackSwitchInProgress=autoplay;
  audio.src=tracks[index].path.split('/').map(encodeURIComponent).join('/');
  audio.load();
  if(musicMode==='radio'&&recordRadio){
@@ -306,7 +308,7 @@ function loadTrack(index,autoplay=false,recordRadio=true){
   radioHistoryPosition=radioHistory.length-1;
  }
  updateMusicUI();
- if(autoplay){playingRequested=true;syncLofi();audio.play().catch(()=>{playingRequested=false;updateMusicUI();syncLofi();});}else syncLofi();
+ if(autoplay){playingRequested=true;syncLofi();audio.play().catch(()=>{trackSwitchInProgress=false;playingRequested=false;updateMusicUI();syncLofi();});}else{trackSwitchInProgress=false;syncLofi();}
 }
 function moveNext(){
  const wasPlaying=playingRequested||!audio.paused;
@@ -373,10 +375,11 @@ musicPlayButton.addEventListener('click',()=>{
 });
 musicPrevButton.addEventListener('click',movePrevious);
 musicNextButton.addEventListener('click',moveNext);
-audio.addEventListener('play',()=>{playingRequested=true;updateMusicUI();syncLofi();});
-audio.addEventListener('pause',()=>{if(!audio.seeking&&audio.networkState!==3){playingRequested=false;}updateMusicUI();syncLofi();});
+audio.addEventListener('play',()=>{trackSwitchInProgress=false;playingRequested=true;updateMusicUI();syncLofi();});
+audio.addEventListener('pause',()=>{if(!trackSwitchInProgress){playingRequested=false;}updateMusicUI();syncLofi();});
 audio.addEventListener('ended',()=>{playingRequested=true;moveNext();});
 audio.addEventListener('error',()=>{
+ trackSwitchInProgress=false;
  playingRequested=false;
  trackTitle.textContent=(trackIndex>=0?tracks[trackIndex].title+' — ':'')+'Chargement impossible';
  syncLofi();
