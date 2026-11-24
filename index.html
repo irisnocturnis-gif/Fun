@@ -65,6 +65,12 @@ small{display:block;margin-top:18px;color:#bda8c5}
 .radio-list button[aria-current="true"]{border-color:#f1b5e6;background:#67416c}
 .radio-note{font-size:.83rem;color:#ccb7d1}
 @media(max-width:420px){.radio{padding:14px}.radio-transport button{min-width:0;flex:1}}
+
+/* Ambiance lo-fi discrète et indépendante de la Radio Astrale */
+.ambience{margin:18px auto 0;padding:14px 16px;border:1px solid #6f527b;border-radius:16px;background:#291e36;text-align:left}
+.ambience-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ambience p{margin:5px 0 0;font-size:.86rem}
+.ambience button[aria-pressed="true"]{background:#89508b;box-shadow:inset 0 0 0 2px #e7bbe7}
 </style>
 </head>
 <body>
@@ -88,6 +94,15 @@ small{display:block;margin-top:18px;color:#bda8c5}
 </div>
 <button id="toggle" type="button" aria-pressed="false">⏸ Mettre en pause</button>
 <small>Animation douce, sans flash et sans son. Le bouton permet de tout arrêter.</small>
+
+
+<section class="ambience" aria-label="Ambiance lo-fi du petit bal">
+ <div class="ambience-row">
+  <div><strong>🌙 Ambiance lo-fi</strong><p id="lofi-status" role="status">Désactivée — active-la pour écouter</p></div>
+  <button type="button" id="lofi-toggle" aria-pressed="false">♫ Activer l'ambiance</button>
+ </div>
+ <p>Une mélodie instrumentale originale et douce, sans publicité. Elle s'efface pendant la radio et revient quand tu la mets en pause.</p>
+</section>
 
 <section class="radio" id="radio" aria-labelledby="radio-title">
  <h2 id="radio-title">📻 Radio Astrale</h2>
@@ -148,6 +163,101 @@ toggle.addEventListener('click',()=>{
  toggle.setAttribute('aria-pressed',String(paused));
 });
 
+
+/* Petit thème lo-fi original : synthèse locale Web Audio, sans fichier externe.
+   Le navigateur exige un clic avant d'autoriser le son. */
+const lofiToggle=document.getElementById('lofi-toggle');
+const lofiStatus=document.getElementById('lofi-status');
+let lofiEnabled=false;
+let lofiContext=null;
+let lofiMaster=null;
+let lofiTimer=null;
+let lofiNextBeat=0;
+let lofiBeat=0;
+const lofiBeatLength=60/74;
+const lofiChords=[
+ [174.61,220,261.63,329.63], // Fmaj7
+ [146.83,174.61,220,261.63], // Dm7
+ [196,246.94,293.66,392],   // G7
+ [130.81,164.81,196,246.94] // Cmaj7
+];
+const lofiNotes=[
+ 329.63,0,392,329.63,261.63,0,220,261.63,
+ 293.66,0,261.63,220,174.61,0,220,261.63,
+ 293.66,0,392,349.23,293.66,0,246.94,220,
+ 261.63,0,329.63,293.66,246.94,0,196,0
+];
+function lofiVoice(freq,time,duration,level,type='sine'){
+ const osc=lofiContext.createOscillator();
+ const gain=lofiContext.createGain();
+ const filter=lofiContext.createBiquadFilter();
+ filter.type='lowpass';filter.frequency.value=850;
+ osc.type=type;osc.frequency.setValueAtTime(freq,time);
+ gain.gain.setValueAtTime(0.0001,time);
+ gain.gain.exponentialRampToValueAtTime(level,time+0.05);
+ gain.gain.exponentialRampToValueAtTime(0.0001,time+duration);
+ osc.connect(filter);filter.connect(gain);gain.connect(lofiMaster);
+ osc.start(time);osc.stop(time+duration+0.03);
+}
+function scheduleLofiBeat(time,beat){
+ const chord=lofiChords[Math.floor(beat/8)%lofiChords.length];
+ const step=beat%8;
+ if(step===0){
+  chord.forEach((freq,i)=>lofiVoice(freq,time,lofiBeatLength*7.7,0.028,'sine'));
+ }
+ if(step===0||step===4){
+  lofiVoice(chord[0]/2,time,lofiBeatLength*1.9,0.055,'triangle');
+ }
+ const note=lofiNotes[beat%lofiNotes.length];
+ if(note)lofiVoice(note,time,lofiBeatLength*0.8,0.023,'sine');
+}
+function scheduleLofi(){
+ if(!lofiContext)return;
+ while(lofiNextBeat<lofiContext.currentTime+0.65){
+  scheduleLofiBeat(lofiNextBeat,lofiBeat);
+  lofiNextBeat+=lofiBeatLength;
+  lofiBeat=(lofiBeat+1)%lofiNotes.length;
+ }
+}
+function ensureLofi(){
+ if(lofiContext)return true;
+ const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+ if(!AudioContextClass){lofiStatus.textContent="Audio non pris en charge par ce navigateur";return false;}
+ lofiContext=new AudioContextClass();
+ lofiMaster=lofiContext.createGain();
+ lofiMaster.gain.value=0;
+ lofiMaster.connect(lofiContext.destination);
+ lofiNextBeat=lofiContext.currentTime+0.06;
+ return true;
+}
+function radioIsActive(){
+ return playingRequested&&!audio.ended;
+}
+function syncLofi(){
+ const shouldPlay=lofiEnabled&&!radioIsActive();
+ if(lofiContext&&lofiMaster){
+  const t=lofiContext.currentTime;
+  lofiMaster.gain.cancelScheduledValues(t);
+  lofiMaster.gain.setTargetAtTime(shouldPlay?0.55:0,t,0.15);
+  if(shouldPlay&&!lofiTimer){
+   lofiNextBeat=t+0.06;
+   scheduleLofi();
+   lofiTimer=setInterval(scheduleLofi,250);
+  }else if(!shouldPlay&&lofiTimer){
+   clearInterval(lofiTimer);
+   lofiTimer=null;
+  }
+ }
+ lofiToggle.setAttribute('aria-pressed',String(lofiEnabled));
+ lofiToggle.textContent=lofiEnabled?'♫ Couper l’ambiance':'♫ Activer l’ambiance';
+ lofiStatus.textContent=!lofiEnabled?'Désactivée':radioIsActive()?'En pause pendant la radio':'Ambiance en cours';
+}
+lofiToggle.addEventListener('click',()=>{
+ lofiEnabled=!lofiEnabled;
+ if(lofiEnabled&&ensureLofi())lofiContext.resume().catch(()=>{});
+ syncLofi();
+});
+
 /* Bibliothèque construite à partir des noms exacts des fichiers du dépôt */
 const tracks=[{"path":"music/ace-of-spades-miroir.mp3","title":"Ace Of spades Miroir"},{"path":"music/Ace Of Spade -Fear (F3AR).mp3","title":"Ace Of Spade — Fear (F3AR)"},{"path":"music/Ace Of Spades- Anges ou Démons.mp3","title":"Ace Of Spades — Anges ou Démons"},{"path":"music/Horlogerie des Ames.mp3","title":"Horlogerie des Ames"},{"path":"music/Je suis Réveurs (Nocturnis lore).mp3","title":"Je suis Réveurs (Nocturnis lore)"},{"path":"music/Les Jeux Sont Pipés.mp3","title":"Les Jeux Sont Pipés"},{"path":"music/Nexus Origine-Un reve dechainer.mp3","title":"Nexus Origine — Un reve dechainer"},{"path":"music/Nocturnis Garden.mp3","title":"Nocturnis Garden"},{"path":"music/Séléné Voilée.mp3","title":"Séléné Voilée"}];
 const audio=document.getElementById('music-player');
@@ -196,7 +306,7 @@ function loadTrack(index,autoplay=false,recordRadio=true){
   radioHistoryPosition=radioHistory.length-1;
  }
  updateMusicUI();
- if(autoplay)audio.play().catch(()=>{playingRequested=false;updateMusicUI();});
+ if(autoplay){playingRequested=true;syncLofi();audio.play().catch(()=>{playingRequested=false;updateMusicUI();syncLofi();});}else syncLofi();
 }
 function moveNext(){
  const wasPlaying=playingRequested||!audio.paused;
@@ -257,17 +367,19 @@ musicPlayButton.addEventListener('click',()=>{
    else loadTrack(0,false,false);
   }
   playingRequested=true;
-  audio.play().catch(()=>{playingRequested=false;updateMusicUI();});
- }else{playingRequested=false;audio.pause();}
+  syncLofi();
+  audio.play().catch(()=>{playingRequested=false;updateMusicUI();syncLofi();});
+ }else{playingRequested=false;audio.pause();syncLofi();}
 });
 musicPrevButton.addEventListener('click',movePrevious);
 musicNextButton.addEventListener('click',moveNext);
-audio.addEventListener('play',()=>{playingRequested=true;updateMusicUI();});
-audio.addEventListener('pause',()=>{playingRequested=false;updateMusicUI();});
+audio.addEventListener('play',()=>{playingRequested=true;updateMusicUI();syncLofi();});
+audio.addEventListener('pause',()=>{if(!audio.seeking&&audio.networkState!==3){playingRequested=false;}updateMusicUI();syncLofi();});
 audio.addEventListener('ended',()=>{playingRequested=true;moveNext();});
 audio.addEventListener('error',()=>{
  playingRequested=false;
  trackTitle.textContent=(trackIndex>=0?tracks[trackIndex].title+' — ':'')+'Chargement impossible';
+ syncLofi();
 });
 updateMusicUI();
 </script>
