@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fun — Le futur jeu 🎮</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 22%,#413051 0%,#221b32 55%,#15121e 100%);color:#ffecfb;text-align:center}
+main{width:min(94vw,670px);padding:28px 14px 36px}
+a{display:inline-block;border:1px solid #b689bb;background:#493457;color:#fff0fb;text-decoration:none;border-radius:999px;padding:12px 20px;font-weight:650}
+a:hover{background:#69487b}a:focus-visible{outline:3px solid #ffe0fb;outline-offset:3px}
+h1{font-size:clamp(1.7rem,6vw,2.6rem);margin:25px 0 9px}
+p{color:#e4cfe8;line-height:1.5}
+.stage{position:relative;display:grid;place-items:center;height:310px;margin:24px auto;border:2px dashed #9873a0;border-radius:26px;background:linear-gradient(150deg,#322340aa,#211a3180);overflow:hidden}
+.stage::after{content:"";position:absolute;bottom:45px;width:135px;height:22px;border-radius:50%;background:#100c1b80;filter:blur(6px)}
+.goof{position:relative;font-size:clamp(5rem,17vw,8rem);line-height:1;z-index:1;animation:goof 5s ease-in-out infinite;filter:drop-shadow(0 8px 10px #190c2277);user-select:none}
+.hat{position:absolute;top:-30px;left:50%;transform:translateX(-50%) rotate(13deg);font-size:3.5rem;animation:hat 5s ease-in-out infinite}
+.note{position:absolute;font-size:1.5rem;color:#eec5fa;opacity:.85;animation:float 6s ease-in-out infinite alternate}
+.note.one{top:28%;left:19%}.note.two{top:20%;right:15%;animation-delay:-2s}.note.three{bottom:23%;right:22%;animation-delay:-4s}
+.subtitle{margin:0 auto 20px;color:#f6d8f3;font-weight:650}
+.footnote{font-size:.9rem;color:#bea9c9}
+@keyframes goof{0%,100%{transform:translateY(6px) rotate(-10deg) scale(1)}25%{transform:translateY(-7px) rotate(12deg) scale(1.05)}50%{transform:translateY(7px) rotate(-4deg) scale(.97)}75%{transform:translateY(-6px) rotate(9deg) scale(1.03)}}
+@keyframes hat{0%,100%{transform:translateX(-50%) translateY(0) rotate(13deg)}50%{transform:translateX(-50%) translateY(-15px) rotate(-15deg)}}
+@keyframes float{from{transform:translateY(3px) rotate(-7deg)}to{transform:translateY(-13px) rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}}
+</style>
+</head>
+<body>
+<main>
+<a href="./index.html">🏡 Retour au petit bal</a>
+<h1>🎮 Le futur jeu de Fun</h1>
+<p class="subtitle">🚧 Chantier très sérieux. Enfin… presque.</p>
+<div class="stage" aria-label="Un petit fantôme maladroit avec un chapeau danse doucement dans la page vide">
+  <span class="note one" aria-hidden="true">✦</span>
+  <span class="note two" aria-hidden="true">✧</span>
+  <span class="note three" aria-hidden="true">✿</span>
+  <div class="goof" aria-hidden="true"><span class="hat">🎩</span>👻</div>
+</div>
+<p>Pour l'instant, il n'y a pas encore de jeu…<br>Juste un fantôme beaucoup trop fier de son animation éclatée. 👻</p>
+<p class="footnote">Cette page attend les idées de Riris. 💜</p>
+</main>
+</body>
+</html>
