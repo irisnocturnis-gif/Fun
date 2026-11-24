@@ -44,6 +44,18 @@ small{display:block;margin-top:18px;color:#bda8c5}
 .choices{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:18px 0 6px}
 .choices button[aria-pressed="true"]{background:#8a518a;box-shadow:0 0 0 2px #edb2e5 inset}
 .character[hidden]{display:none!important}
+/* Onglet Bal : Aelysia 2.0 danse sur la musique en cours */
+.scene.scene-bal{height:420px}
+.bal{width:320px;height:410px;position:relative;display:flex;align-items:flex-end;justify-content:center;margin:0 auto}
+.bal-floor{position:absolute;left:50%;bottom:6px;width:280px;height:46px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at center,#c58be055 0%,#8a518a33 45%,#0000 72%)}
+.bal-shadow{position:absolute;left:50%;bottom:22px;width:150px;height:20px;margin-left:-75px;border-radius:50%;background:#0b0710aa;filter:blur(5px);transform-origin:center}
+.bal-dancer{position:relative;width:220px;height:280px;margin-bottom:26px;transform-origin:50% 92%;will-change:transform;filter:drop-shadow(0 8px 8px #100b1780)}
+.bal-dancer img{display:block;width:100%;height:100%;object-fit:contain}
+.bal-caption{display:block;margin-top:10px;color:#e9d3ef;font-size:.95rem;min-height:1.4em}
+.bal-spark{position:absolute;pointer-events:none;font-size:1.1rem;opacity:0;animation:balSpark 1.6s ease-out forwards}
+@keyframes balSpark{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:.95}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(var(--rot))}}
+@media(prefers-reduced-motion:reduce){.bal-spark{display:none}}
+
 .aelysia{width:220px;height:280px;position:relative;animation:aelysiaSway 2.5s ease-in-out infinite;transform-origin:50% 85%;filter:drop-shadow(0 8px 8px #100b1780)}
 .aelysia img{display:block;width:100%;height:100%;object-fit:contain}
 @keyframes aelysiaSway{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
@@ -111,6 +123,7 @@ small{display:block;margin-top:18px;color:#bda8c5}
 <button type="button" id="choose-mochi" aria-pressed="true">🐰 Mochi</button>
 <button type="button" id="choose-aelysia" aria-pressed="false">🌙 Aelysia originale</button>
 <button type="button" id="choose-aelysia2" aria-pressed="false">✨ Aelysia 2.0</button>
+<button type="button" id="choose-bal" aria-pressed="false">💃 Bal</button>
 </div>
 <div class="scene" id="scene" aria-label="Un petit lapin rose danse doucement">
 <span class="sparkle s1" aria-hidden="true">🌸</span><span class="sparkle s2" aria-hidden="true">✨</span><span class="sparkle s3" aria-hidden="true">💜</span>
@@ -121,8 +134,13 @@ small{display:block;margin-top:18px;color:#bda8c5}
 <div class="aelysia character" id="aelysia2" hidden aria-hidden="true">
 <img class="aelysia-original" src="Aelysia2.0.png" alt="Aelysia 2.0 détourée, sur fond transparent">
 </div>
+<div class="bal character" id="bal" hidden aria-hidden="true">
+<div class="bal-floor"></div><div class="bal-shadow" id="bal-shadow"></div>
+<div class="bal-dancer" id="bal-dancer"><img src="Aelysia2.0.png" alt="Aelysia 2.0 danse sur la musique en cours"></div>
+</div>
 </div>
 <button id="toggle" type="button" aria-pressed="false">⏸ Mettre en pause</button>
+<small id="bal-caption" class="bal-caption" hidden aria-live="polite"></small>
 <small>Animation douce et sans flash. Le bouton permet de mettre les personnages en pause.</small>
 
 
@@ -188,17 +206,20 @@ const toggle=document.getElementById('toggle');
 const characters={
  mochi:document.getElementById('mochi'),
  aelysia:document.getElementById('aelysia'),
- aelysia2:document.getElementById('aelysia2')
+ aelysia2:document.getElementById('aelysia2'),
+ bal:document.getElementById('bal')
 };
 const buttons={
  mochi:document.getElementById('choose-mochi'),
  aelysia:document.getElementById('choose-aelysia'),
- aelysia2:document.getElementById('choose-aelysia2')
+ aelysia2:document.getElementById('choose-aelysia2'),
+ bal:document.getElementById('choose-bal')
 };
 const descriptions={
  mochi:'Mochi est prêt à danser !',
  aelysia:'Aelysia originale rejoint le bal !',
- aelysia2:'Aelysia 2.0 danse sans son décor !'
+ aelysia2:'Aelysia 2.0 danse sans son décor !',
+ bal:'Au bal, Aelysia danse sur la musique en cours !'
 };
 const description=document.getElementById('description');
 function choose(character){
@@ -208,6 +229,7 @@ function choose(character){
   buttons[key].setAttribute('aria-pressed',String(isSelected));
  }
  description.textContent=descriptions[character];
+ if(typeof onBalChoice==='function')onBalChoice(character==='bal');
  scene.setAttribute('aria-label',descriptions[character]);
 }
 for(const key of Object.keys(buttons)){
@@ -662,6 +684,134 @@ dvdSmiley.addEventListener('click',()=>{
  smileyLastClick=now;
  if(smileyClicks>=7){smileyClicks=0;showerSmiley();}
 });
+
+/* ===== Onglet Bal : Aelysia 2.0 danse sur la musique en cours ===== */
+const balEl=document.getElementById('bal');
+const balDancer=document.getElementById('bal-dancer');
+const balShadow=document.getElementById('bal-shadow');
+const balCaption=document.getElementById('bal-caption');
+const balReduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let balActive=false,balRaf=0,balRadioNodes=null,balLofiAnalyser=null;
+const bal={x:0,y:0,vx:0,vy:0,rot:0,vrot:0,sq:0,vsq:0,flip:1,spin:0,dir:1,beat:0,lastBeat:0,interval:520,level:0,avg:0,history:[],source:'none'};
+function balHookRadio(){
+ if(balRadioNodes!==null)return;
+ balRadioNodes=false;
+ try{
+  const C=window.AudioContext||window.webkitAudioContext;
+  if(!C)return;
+  const ctx=new C();
+  const src=ctx.createMediaElementSource(audio);
+  const an=ctx.createAnalyser();an.fftSize=512;an.smoothingTimeConstant=0.55;
+  src.connect(an);an.connect(ctx.destination);
+  balRadioNodes={ctx,an,data:new Uint8Array(an.frequencyBinCount)};
+ }catch(e){balRadioNodes=false;}
+}
+function balHookLofi(){
+ if(balLofiAnalyser||!lofiContext||!lofiMaster)return;
+ try{
+  const an=lofiContext.createAnalyser();an.fftSize=512;an.smoothingTimeConstant=0.55;
+  lofiMaster.connect(an);
+  balLofiAnalyser={an,data:new Uint8Array(an.frequencyBinCount)};
+ }catch(e){}
+}
+function balBass(node){
+ node.an.getByteFrequencyData(node.data);
+ let sum=0;for(let i=1;i<9;i++)sum+=node.data[i];
+ let all=0;for(let i=1;i<60;i++)all+=node.data[i];
+ return {bass:sum/8/255,all:all/59/255};
+}
+function balSpawnSparks(n){
+ if(balReduced)return;
+ const icons=['🌸','✨','💜','🌙'];
+ for(let i=0;i<n;i++){
+  const el=document.createElement('span');
+  el.className='bal-spark';
+  el.textContent=icons[Math.floor(Math.random()*icons.length)];
+  el.style.left=(20+Math.random()*60)+'%';
+  el.style.top=(25+Math.random()*45)+'%';
+  el.style.setProperty('--dx',((Math.random()*2-1)*70).toFixed(0)+'px');
+  el.style.setProperty('--dy',(-40-Math.random()*70).toFixed(0)+'px');
+  el.style.setProperty('--rot',((Math.random()*2-1)*40).toFixed(0)+'deg');
+  balEl.appendChild(el);
+  setTimeout(()=>el.remove(),1700);
+ }
+}
+function balOnBeat(strength){
+ bal.beat++;
+ bal.dir=-bal.dir;
+ const k=balReduced?0.35:1;
+ bal.vy-=(260+260*strength)*k;      // saut
+ bal.vx+=bal.dir*(70+60*strength)*k;// pas chassé
+ bal.vrot+=bal.dir*(90+80*strength)*k;
+ bal.vsq+=(2.6+1.6*strength)*k;      // écrasement/étirement
+ if(bal.beat%8===0&&!balReduced){bal.spin=1;balSpawnSparks(6);}
+ else if(bal.beat%4===0)balSpawnSparks(2);
+}
+let balPrev=0;
+function balFrame(ts){
+ if(!balActive){balRaf=0;return;}
+ balRaf=requestAnimationFrame(balFrame);
+ if(scene.classList.contains('paused')){balPrev=ts;return;}
+ const dt=Math.min(0.05,(ts-(balPrev||ts))/1000);balPrev=ts;
+ balHookLofi();
+ // source active : radio en priorité, sinon ambiance lo-fi
+ let node=null,label='none';
+ if(balRadioNodes&&!audio.paused&&!audio.ended&&radioIsActive()){node=balRadioNodes;label='radio';}
+ else if(balLofiAnalyser&&lofiEnabled&&!radioIsActive()&&lofiContext&&lofiContext.state==='running'){node=balLofiAnalyser;label='lofi';}
+ else if(!balRadioNodes&&!audio.paused&&!audio.ended){label='radio-blind';}
+ const now=ts;
+ let playing=false,bass=0,all=0;
+ if(node){
+  const m=balBass(node);bass=m.bass;all=m.all;
+  playing=all>0.01;
+ }else if(label==='radio-blind'){playing=true;}
+ bal.source=playing?label:'none';
+ if(playing){
+  bal.history.push(bass);if(bal.history.length>43)bal.history.shift();
+  bal.avg=bal.history.reduce((a,b)=>a+b,0)/bal.history.length;
+  const since=now-bal.lastBeat;
+  const hit=node&&bass>bal.avg*1.22+0.03&&bass>0.12&&since>300;
+  const metronome=since>Math.max(bal.interval,430)*1.2;   // la musique sans grosse caisse garde le rythme
+  if(hit||metronome){
+   if(hit&&since<1500)bal.interval=bal.interval*0.6+since*0.4;
+   bal.lastBeat=now;
+   balOnBeat(Math.min(1,bass*1.6+all));
+  }
+ }else{
+  bal.history.length=0;
+  // au repos : respiration douce
+  const t=now/1000;
+  bal.vrot+=(Math.sin(t*1.6)*3-bal.rot)*dt*4;
+ }
+ // ressorts
+ const kx=60,cx=9,ky=0,g=1500;
+ bal.vx+=(-kx*bal.x)*dt;bal.vx*=Math.exp(-cx*dt);bal.x+=bal.vx*dt;
+ bal.vy+=g*dt;bal.y+=bal.vy*dt;
+ if(bal.y>0){bal.y=0;bal.vy=0;}
+ bal.vrot+=(-90*bal.rot)*dt;bal.vrot*=Math.exp(-6*dt);bal.rot+=bal.vrot*dt;
+ bal.vsq+=(-160*bal.sq)*dt;bal.vsq*=Math.exp(-9*dt);bal.sq+=bal.vsq*dt;
+ if(bal.spin>0){bal.spin=Math.max(0,bal.spin-dt*1.6);}
+ const spinX=Math.cos((1-bal.spin)*Math.PI*2*(bal.spin>0?1:0));
+ const air=Math.min(1,-bal.y/90);
+ const sx=1+bal.sq*0.04*(bal.y<-4?-1:1);
+ const sy=1-bal.sq*0.05*(bal.y<-4?-1:1);
+ balDancer.style.transform='translate('+bal.x.toFixed(1)+'px,'+bal.y.toFixed(1)+'px) rotate('+bal.rot.toFixed(2)+'deg) scale('+(sx*(bal.spin>0?spinX:1)).toFixed(3)+','+sy.toFixed(3)+')';
+ balShadow.style.transform='translateX('+(bal.x*0.6).toFixed(1)+'px) scale('+(1-air*0.35).toFixed(3)+')';
+ balShadow.style.opacity=String(1-air*0.4);
+ const msg=playing?(label==='lofi'?'💃 Elle danse sur l’ambiance lo-fi du petit bal':'💃 Elle danse sur : '+(trackTitle.textContent||'la radio')):'🎵 Lance la radio ou l’ambiance : Aelysia attend la musique…';
+ if(balCaption.textContent!==msg)balCaption.textContent=msg;
+}
+function onBalChoice(on){
+ balActive=on;
+ scene.classList.toggle('scene-bal',on);
+ balCaption.hidden=!on;
+ if(on){
+  balHookRadio();
+  if(balRadioNodes&&balRadioNodes.ctx.state==='suspended')balRadioNodes.ctx.resume().catch(()=>{});
+  if(!balRaf){balPrev=0;balRaf=requestAnimationFrame(balFrame);}
+ }
+}
+audio.addEventListener('play',()=>{if(balRadioNodes&&balRadioNodes.ctx.state==='suspended')balRadioNodes.ctx.resume().catch(()=>{});});
 </script>
 </body>
 </html>
