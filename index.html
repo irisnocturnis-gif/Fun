@@ -71,12 +71,25 @@ small{display:block;margin-top:18px;color:#bda8c5}
 .ambience-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .ambience p{margin:5px 0 0;font-size:.86rem}
 .ambience button[aria-pressed="true"]{background:#89508b;box-shadow:inset 0 0 0 2px #e7bbe7}
+
+/* Horloge réelle, synchronisée sur le fuseau Europe/Paris */
+.clock{margin:16px auto 22px;padding:18px 20px;border:1px solid #81638d;border-radius:20px;background:#251b34d9;box-shadow:0 9px 28px #09061130}
+.clock-time{display:block;font-variant-numeric:tabular-nums;font-size:clamp(2.2rem,8vw,3.25rem);font-weight:750;letter-spacing:.045em;line-height:1.3}
+.clock-date{font-size:1.02rem;color:#f0d7ed;text-transform:capitalize}
+.clock-zone{font-size:.79rem;color:#ccb9d5;margin-top:7px}
+.clock-period{display:inline-block;margin-top:9px;padding:5px 12px;border-radius:999px;background:#51365f;color:#f9e4fc;font-size:.84rem}
 </style>
 </head>
 <body>
 <main>
 <h1>🌸 Le petit bal de Fun 🌸</h1>
 <p id="description">Mochi est prêt à danser !</p>
+<section class="clock" aria-label="Date et heure actuelles de Paris">
+ <div class="clock-date" id="clock-date">Date de Paris</div>
+ <time class="clock-time" id="clock-time">--:--:--</time>
+ <div class="clock-zone">🕰️ Heure de Paris · France</div>
+ <div class="clock-period" id="clock-period">Chargement de l'ambiance…</div>
+</section>
 <div class="choices" role="group" aria-label="Choisir un personnage">
 <button type="button" id="choose-mochi" aria-pressed="true">🐰 Mochi</button>
 <button type="button" id="choose-aelysia" aria-pressed="false">🌙 Aelysia originale</button>
@@ -128,6 +141,26 @@ small{display:block;margin-top:18px;color:#bda8c5}
 </section>
 </main>
 <script>
+const clockTime=document.getElementById('clock-time');
+const clockDate=document.getElementById('clock-date');
+const clockPeriod=document.getElementById('clock-period');
+const clockFormatter=new Intl.DateTimeFormat('fr-FR',{
+ timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+});
+const dateFormatter=new Intl.DateTimeFormat('fr-FR',{
+ timeZone:'Europe/Paris',weekday:'long',day:'numeric',month:'long',year:'numeric'
+});
+function updateClock(){
+ const now=new Date();
+ clockTime.textContent=clockFormatter.format(now);
+ clockTime.setAttribute('datetime',now.toISOString());
+ clockDate.textContent=dateFormatter.format(now);
+ const isNight=getAmbiencePeriod()==='night';
+ clockPeriod.textContent=isNight?'🌙 Ambiance nocturne · 20 h – 7 h 30':'☀️ Ambiance de jour · 7 h 30 – 20 h';
+}
+updateClock();
+setInterval(updateClock,1000);
+
 const scene=document.getElementById('scene');
 const toggle=document.getElementById('toggle');
 const characters={
