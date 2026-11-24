@@ -92,7 +92,7 @@ small{display:block;margin-top:18px;color:#bda8c5}
 .clock-period{display:inline-block;margin-top:9px;padding:5px 12px;border-radius:999px;background:#51365f;color:#f9e4fc;font-size:.84rem}
 
 /* Œilbert : l’easter egg du smiley DVD, doux et sans effets lumineux */
-#dvd-smiley{position:fixed;left:0;top:0;z-index:5;padding:8px 10px;border:1px solid #c89acb66;border-radius:16px;background:#281b3780;font-size:clamp(1.2rem,3.7vw,1.7rem);white-space:nowrap;line-height:1.3;cursor:pointer;will-change:transform;touch-action:manipulation;box-shadow:0 4px 14px #140e2026;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 1.3s ease,visibility 1.3s ease}#dvd-smiley.dvd-visible{opacity:.65;visibility:visible;pointer-events:auto}main{position:relative;z-index:10}
+#dvd-smiley{position:fixed;left:0;top:0;z-index:15;padding:8px 10px;border:1px solid #c89acb66;border-radius:16px;background:#281b3780;font-size:clamp(1.2rem,3.7vw,1.7rem);white-space:nowrap;line-height:1.3;cursor:pointer;will-change:transform;touch-action:manipulation;box-shadow:0 4px 14px #140e2026;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 1.3s ease,visibility 1.3s ease}#dvd-smiley.dvd-visible{opacity:.65;visibility:visible;pointer-events:auto}main{position:relative;z-index:auto}.radio,.ambience,.clock,.choices{position:relative;z-index:20}
 #dvd-smiley .dvd-face{display:block;animation:dvd-turn 18s ease-in-out infinite alternate}
 #dvd-smiley:focus-visible{outline:3px solid #ffd6f9;outline-offset:3px}
 @keyframes dvd-turn{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
