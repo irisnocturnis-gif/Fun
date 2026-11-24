@@ -49,6 +49,22 @@ small{display:block;margin-top:18px;color:#bda8c5}
 @keyframes aelysiaSway{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){.aelysia{animation:none!important}}
 .aelysia-original{width:100%;height:100%;object-fit:contain;border-radius:12px}
+
+/* Radio et discothèque */
+.radio{margin:30px auto 0;text-align:left;background:linear-gradient(155deg,#34233f,#221a32);border:1px solid #7d567d;border-radius:22px;padding:22px;box-shadow:0 15px 35px #0a07132e}
+.radio h2{margin:0 0 5px;font-size:1.35rem}.radio p{margin:4px 0 14px;font-size:.92rem}
+.radio-modes,.radio-transport{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.radio-modes button[aria-pressed="true"]{background:#89508b;box-shadow:inset 0 0 0 2px #e7bbe7}
+.radio-transport button{min-width:110px}
+.now-playing{border:1px solid #765475;border-radius:14px;padding:12px 14px;background:#181223;margin:14px 0}
+.now-playing strong{display:block;overflow-wrap:anywhere;margin-top:4px}
+.radio audio{display:block;width:100%;margin:14px 0 6px;color-scheme:dark}
+.radio label{display:block;margin-top:12px;font-weight:650}
+.radio-list{list-style:none;margin:10px 0 0;padding:0;max-height:280px;overflow:auto;display:grid;gap:6px}
+.radio-list button{width:100%;text-align:left;border-radius:12px;padding:11px 13px;background:#35263f;overflow-wrap:anywhere}
+.radio-list button[aria-current="true"]{border-color:#f1b5e6;background:#67416c}
+.radio-note{font-size:.83rem;color:#ccb7d1}
+@media(max-width:420px){.radio{padding:14px}.radio-transport button{min-width:0;flex:1}}
 </style>
 </head>
 <body>
@@ -72,6 +88,28 @@ small{display:block;margin-top:18px;color:#bda8c5}
 </div>
 <button id="toggle" type="button" aria-pressed="false">⏸ Mettre en pause</button>
 <small>Animation douce, sans flash et sans son. Le bouton permet de tout arrêter.</small>
+
+<section class="radio" id="radio" aria-labelledby="radio-title">
+ <h2 id="radio-title">📻 Radio Astrale</h2>
+ <p>Les musiques de Riris, au rythme du petit bal de Fun !</p>
+ <div class="radio-modes" role="group" aria-label="Mode d'écoute">
+  <button id="radio-mode" type="button" aria-pressed="true">🔀 Radio aléatoire</button>
+  <button id="playlist-mode" type="button" aria-pressed="false">🎼 Playlist</button>
+ </div>
+ <div class="now-playing" role="status" aria-live="polite">
+  <span class="radio-note" id="mode-label">Radio — lecture aléatoire</span>
+  <strong id="track-title">Aucune musique en lecture</strong>
+ </div>
+ <div class="radio-transport">
+  <button type="button" id="music-prev" aria-label="Chanson précédente">⏮ Précédent</button>
+  <button type="button" id="music-play">▶ Écouter</button>
+  <button type="button" id="music-next">⏭ Suivant</button>
+ </div>
+ <audio id="music-player" controls preload="none" aria-label="Lecteur musical"></audio>
+ <label for="music-list">🎵 Choisir une musique</label>
+ <ul class="radio-list" id="music-list" aria-label="Playlist des chansons"></ul>
+ <p class="radio-note">Le son démarre uniquement quand tu le demandes. Aucune lumière clignotante.</p>
+</section>
 </main>
 <script>
 const scene=document.getElementById('scene');
@@ -109,6 +147,129 @@ toggle.addEventListener('click',()=>{
  toggle.textContent=paused?'▶ Reprendre la danse':'⏸ Mettre en pause';
  toggle.setAttribute('aria-pressed',String(paused));
 });
+
+/* Bibliothèque construite à partir des noms exacts des fichiers du dépôt */
+const tracks=[{"path":"music/_Ace Of spades Miroir.mp3","title":"Ace Of spades Miroir"},{"path":"music/Ace Of Spade -Fear (F3AR).mp3","title":"Ace Of Spade — Fear (F3AR)"},{"path":"music/Ace Of Spades- Anges ou Démons.mp3","title":"Ace Of Spades — Anges ou Démons"},{"path":"music/Horlogerie des Ames.mp3","title":"Horlogerie des Ames"},{"path":"music/Je suis Réveurs (Nocturnis lore).mp3","title":"Je suis Réveurs (Nocturnis lore)"},{"path":"music/Les Jeux Sont Pipés.mp3","title":"Les Jeux Sont Pipés"},{"path":"music/Nexus Origine-Un reve dechainer.mp3","title":"Nexus Origine — Un reve dechainer"},{"path":"music/Nocturnis Garden.mp3","title":"Nocturnis Garden"},{"path":"music/Séléné Voilée.mp3","title":"Séléné Voilée"}];
+const audio=document.getElementById('music-player');
+const trackTitle=document.getElementById('track-title');
+const modeLabel=document.getElementById('mode-label');
+const radioModeButton=document.getElementById('radio-mode');
+const playlistModeButton=document.getElementById('playlist-mode');
+const musicPlayButton=document.getElementById('music-play');
+const musicPrevButton=document.getElementById('music-prev');
+const musicNextButton=document.getElementById('music-next');
+const musicList=document.getElementById('music-list');
+let musicMode='radio';
+let trackIndex=-1;
+let shuffleRemaining=[];
+let radioHistory=[];
+let radioHistoryPosition=-1;
+let playingRequested=false;
+audio.volume=0.6;
+function freshShuffle(except=-1){
+ const ids=tracks.map((_,i)=>i).filter(i=>i!==except);
+ for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}
+ return ids;
+}
+function nextRandom(){
+ if(shuffleRemaining.length===0)shuffleRemaining=freshShuffle(trackIndex);
+ return shuffleRemaining.shift();
+}
+function updateMusicUI(){
+ radioModeButton.setAttribute('aria-pressed',String(musicMode==='radio'));
+ playlistModeButton.setAttribute('aria-pressed',String(musicMode==='playlist'));
+ modeLabel.textContent=musicMode==='radio'?'Radio — lecture aléatoire':'Playlist — ordre des chansons';
+ trackTitle.textContent=trackIndex<0?'Aucune musique en lecture':tracks[trackIndex].title;
+ musicPlayButton.textContent=audio.paused?'▶ Écouter':'⏸ Pause';
+ for(const button of musicList.querySelectorAll('button[data-track]')){
+  button.setAttribute('aria-current',String(Number(button.dataset.track)===trackIndex));
+ }
+}
+function loadTrack(index,autoplay=false,recordRadio=true){
+ if(index<0||index>=tracks.length)return;
+ trackIndex=index;
+ audio.src=tracks[index].path.split('/').map(encodeURIComponent).join('/');
+ audio.load();
+ if(musicMode==='radio'&&recordRadio){
+  radioHistory=radioHistory.slice(0,radioHistoryPosition+1);
+  radioHistory.push(index);
+  radioHistoryPosition=radioHistory.length-1;
+ }
+ updateMusicUI();
+ if(autoplay)audio.play().catch(()=>{playingRequested=false;updateMusicUI();});
+}
+function moveNext(){
+ const wasPlaying=playingRequested||!audio.paused;
+ if(musicMode==='radio'){
+  if(radioHistoryPosition<radioHistory.length-1){
+   radioHistoryPosition++;
+   loadTrack(radioHistory[radioHistoryPosition],wasPlaying,false);
+  }else loadTrack(nextRandom(),wasPlaying,true);
+ }else loadTrack((trackIndex+1)%tracks.length,wasPlaying,false);
+}
+function movePrevious(){
+ const wasPlaying=playingRequested||!audio.paused;
+ if(musicMode==='radio'){
+  if(radioHistoryPosition>0){
+   radioHistoryPosition--;
+   loadTrack(radioHistory[radioHistoryPosition],wasPlaying,false);
+  }else{audio.currentTime=0;}
+ }else loadTrack((trackIndex-1+tracks.length)%tracks.length,wasPlaying,false);
+}
+function setMusicMode(nextMode){
+ if(musicMode===nextMode)return;
+ musicMode=nextMode;
+ if(nextMode==='radio'){
+  shuffleRemaining=freshShuffle(trackIndex);
+  radioHistory=trackIndex<0?[]:[trackIndex];
+  radioHistoryPosition=radioHistory.length-1;
+ }
+ updateMusicUI();
+}
+tracks.forEach((track,index)=>{
+ const li=document.createElement('li');
+ const btn=document.createElement('button');
+ btn.type='button';
+ btn.dataset.track=String(index);
+ btn.textContent=(index+1)+'. '+track.title;
+ btn.addEventListener('click',()=>{
+  setMusicMode('playlist');
+  playingRequested=true;
+  loadTrack(index,true,false);
+ });
+ li.appendChild(btn);
+ musicList.appendChild(li);
+});
+radioModeButton.addEventListener('click',()=>{
+ const first=trackIndex<0;
+ setMusicMode('radio');
+ if(first)loadTrack(nextRandom(),false,true);
+});
+playlistModeButton.addEventListener('click',()=>{
+ const first=trackIndex<0;
+ setMusicMode('playlist');
+ if(first)loadTrack(0,false,false);
+});
+musicPlayButton.addEventListener('click',()=>{
+ if(audio.paused){
+  if(trackIndex<0){
+   if(musicMode==='radio')loadTrack(nextRandom(),false,true);
+   else loadTrack(0,false,false);
+  }
+  playingRequested=true;
+  audio.play().catch(()=>{playingRequested=false;updateMusicUI();});
+ }else{playingRequested=false;audio.pause();}
+});
+musicPrevButton.addEventListener('click',movePrevious);
+musicNextButton.addEventListener('click',moveNext);
+audio.addEventListener('play',()=>{playingRequested=true;updateMusicUI();});
+audio.addEventListener('pause',()=>{playingRequested=false;updateMusicUI();});
+audio.addEventListener('ended',()=>{playingRequested=true;moveNext();});
+audio.addEventListener('error',()=>{
+ playingRequested=false;
+ trackTitle.textContent=(trackIndex>=0?tracks[trackIndex].title+' — ':'')+'Chargement impossible';
+});
+updateMusicUI();
 </script>
 </body>
 </html>
