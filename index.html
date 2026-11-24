@@ -111,9 +111,9 @@ small{display:block;margin-top:18px;color:#bda8c5}
 
 <section class="ambience" aria-label="Ambiance lo-fi du petit bal">
  <div class="ambience-row">
-  <div><strong>🌗 Ambiance du petit bal</strong><p id="lofi-status" role="status">Désactivée — active-la pour écouter</p></div>
+  <div><strong>🌗 Ambiance du petit bal</strong><p id="lofi-status" role="status">Ambiance activée — en attente du son</p></div>
   <button type="button" id="lofi-next">⏭ Mélodie suivante</button>
-  <button type="button" id="lofi-toggle" aria-pressed="false">♫ Activer l'ambiance</button>
+  <button type="button" id="lofi-toggle" aria-pressed="true">♫ Couper l'ambiance</button>
  </div>
  <p>De 20 h à 7 h 30 (heure de Paris) : trois mélodies lo-fi. Le jour : une mélodie joyeuse et plus rythmée. La radio garde toujours la priorité.</p>
 </section>
@@ -202,7 +202,7 @@ toggle.addEventListener('click',()=>{
    Aucun extrait de musique existante. Génération locale Web Audio après un clic. */
 const lofiToggle=document.getElementById('lofi-toggle');
 const lofiStatus=document.getElementById('lofi-status');
-let lofiEnabled=false;
+let lofiEnabled=true;
 let lofiContext=null;
 let lofiMaster=null;
 let lofiTimer=null;
@@ -410,7 +410,8 @@ function updateLofiStatus(){
  lofiToggle.textContent=lofiEnabled?'♫ Couper l’ambiance':'♫ Activer l’ambiance';
  const period=ambiencePeriod||getAmbiencePeriod();
  const periodName=period==='night'?'Nuit · 20 h – 7 h 30':'Jour · 7 h 30 – 20 h';
- lofiStatus.textContent=!lofiEnabled?'Désactivée · '+periodName:radioIsActive()?'En pause pendant la radio':periodName+' · '+ambienceName();
+ const blocked=lofiEnabled&&lofiContext&&lofiContext.state==='suspended'&&!radioIsActive();
+ lofiStatus.textContent=!lofiEnabled?'Désactivée · '+periodName:radioIsActive()?'En pause pendant la radio':blocked?'Ambiance prête · touche la page pour entendre':periodName+' · '+ambienceName();
 }
 document.getElementById('lofi-next').addEventListener('click',()=>{
  if(getAmbiencePeriod()==='day'){
@@ -444,6 +445,22 @@ lofiToggle.addEventListener('click',()=>{
  if(lofiEnabled&&ensureLofi())lofiContext.resume().catch(()=>{});
  syncLofi();
 });
+/* L'ambiance est activée dès l'ouverture. Si l'autoplay est bloqué,
+   le premier geste sur la page déverrouille l'audio sans second bouton. */
+if(ensureLofi()){
+ syncLofi();
+ lofiContext.resume().then(updateLofiStatus).catch(updateLofiStatus);
+}
+function unlockAmbience(event){
+ if(!lofiEnabled||radioIsActive())return;
+ if(event.target.closest&&event.target.closest('#radio,#lofi-toggle'))return;
+ if(lofiContext&&lofiContext.state==='suspended'){
+  lofiContext.resume().then(()=>{syncLofi();updateLofiStatus();}).catch(updateLofiStatus);
+ }
+}
+document.addEventListener('pointerdown',unlockAmbience,{passive:true});
+document.addEventListener('keydown',unlockAmbience);
+
 
 /* Bibliothèque construite à partir des noms exacts des fichiers du dépôt */
 const tracks=[{"path":"music/ace-of-spades-miroir.mp3","title":"Ace Of spades Miroir"},{"path":"music/Ace Of Spade -Fear (F3AR).mp3","title":"Ace Of Spade — Fear (F3AR)"},{"path":"music/Ace Of Spades- Anges ou Démons.mp3","title":"Ace Of Spades — Anges ou Démons"},{"path":"music/Horlogerie des Ames.mp3","title":"Horlogerie des Ames"},{"path":"music/Je suis Réveurs (Nocturnis lore).mp3","title":"Je suis Réveurs (Nocturnis lore)"},{"path":"music/Les Jeux Sont Pipés.mp3","title":"Les Jeux Sont Pipés"},{"path":"music/Nexus Origine-Un reve dechainer.mp3","title":"Nexus Origine — Un reve dechainer"},{"path":"music/Nocturnis Garden.mp3","title":"Nocturnis Garden"},{"path":"music/Séléné Voilée.mp3","title":"Séléné Voilée"}];
