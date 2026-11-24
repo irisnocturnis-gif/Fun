@@ -101,7 +101,7 @@ small{display:block;margin-top:18px;color:#bda8c5}
   <div><strong>🌙 Ambiance lo-fi</strong><p id="lofi-status" role="status">Désactivée — active-la pour écouter</p></div>
   <button type="button" id="lofi-toggle" aria-pressed="false">♫ Activer l'ambiance</button>
  </div>
- <p>Une mélodie instrumentale originale et douce, sans publicité. Elle s'efface pendant la radio et revient quand tu la mets en pause.</p>
+ <p>Trois mélodies instrumentales originales et douces, sans publicité. Elle s'efface pendant la radio et revient quand tu la mets en pause.</p>
 </section>
 
 <section class="radio" id="radio" aria-labelledby="radio-title">
@@ -164,8 +164,8 @@ toggle.addEventListener('click',()=>{
 });
 
 
-/* Petit thème lo-fi original : synthèse locale Web Audio, sans fichier externe.
-   Le navigateur exige un clic avant d'autoriser le son. */
+/* Trois petites mélodies originales d'ambiance : forêt, pluie et clair de lune.
+   Aucun extrait de musique existante. Génération locale Web Audio après un clic. */
 const lofiToggle=document.getElementById('lofi-toggle');
 const lofiStatus=document.getElementById('lofi-status');
 let lofiEnabled=false;
@@ -174,55 +174,84 @@ let lofiMaster=null;
 let lofiTimer=null;
 let lofiNextBeat=0;
 let lofiBeat=0;
-const lofiBeatLength=60/74;
-const lofiChords=[
- [174.61,220,261.63,329.63], // Fmaj7
- [146.83,174.61,220,261.63], // Dm7
- [196,246.94,293.66,392],   // G7
- [130.81,164.81,196,246.94] // Cmaj7
+let lofiSequence=0;
+const lofiBeatLength=60/78;
+const lofiThemes=[
+ {name:'Rêverie des bois',chords:[
+  ['F3','A3','C4','E4'],['D3','F3','A3','C4'],['Bb2','D3','F3','A3'],['C3','E3','G3','B3']
+ ],melody:['A4',null,'C5','E5','D5',null,'C5','A4','G4',null,'A4','C5','A4',null,'F4',null,
+ 'F4','A4','C5',null,'D5','C5','A4',null,'G4','A4','G4','E4','F4',null,null,null]},
+ {name:'Pluie de pétales',chords:[
+  ['A2','C3','E3','G3'],['F3','A3','C4','E4'],['D3','F3','A3','C4'],['E3','G3','B3','D4']
+ ],melody:['E5',null,'C5','B4','A4',null,'G4',null,'A4','C5',null,'E5','D5','C5',null,null,
+ 'A4','B4','C5',null,'E5','D5','C5','A4','G4',null,'B4','A4','G4',null,null,null]},
+ {name:'Lanterne au clair de lune',chords:[
+  ['C3','E3','G3','B3'],['G2','B2','D3','F3'],['A2','C3','E3','G3'],['F3','A3','C4','E4']
+ ],melody:['G4','C5',null,'D5','E5',null,'D5','C5','B4',null,'G4','A4','B4',null,null,null,
+ 'C5',null,'E5','G5','E5','D5','C5',null,'A4','C5','B4',null,'G4',null,null,null]}
 ];
-const lofiNotes=[
- 329.63,0,392,329.63,261.63,0,220,261.63,
- 293.66,0,261.63,220,174.61,0,220,261.63,
- 293.66,0,392,349.23,293.66,0,246.94,220,
- 261.63,0,329.63,293.66,246.94,0,196,0
-];
-function lofiVoice(freq,time,duration,level,type='sine'){
+function lofiHz(note){
+ if(!note)return 0;
+ const m=/^([A-G])([b#]?)([0-8])$/.exec(note);
+ if(!m)return 0;
+ const keys={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+ const midi=(Number(m[3])+1)*12+keys[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0);
+ return 440*Math.pow(2,(midi-69)/12);
+}
+function lofiVoice(freq,time,duration,level,type='sine',cutoff=1200){
+ if(!lofiContext||!freq)return;
  const osc=lofiContext.createOscillator();
  const gain=lofiContext.createGain();
  const filter=lofiContext.createBiquadFilter();
- filter.type='lowpass';filter.frequency.value=850;
+ filter.type='lowpass';filter.frequency.value=cutoff;
  osc.type=type;osc.frequency.setValueAtTime(freq,time);
  gain.gain.setValueAtTime(0.0001,time);
- gain.gain.exponentialRampToValueAtTime(level,time+0.05);
- gain.gain.exponentialRampToValueAtTime(0.0001,time+duration);
+ gain.gain.exponentialRampToValueAtTime(Math.max(level,0.0002),time+0.04);
+ gain.gain.exponentialRampToValueAtTime(0.0001,time+Math.max(duration,0.08));
  osc.connect(filter);filter.connect(gain);gain.connect(lofiMaster);
- osc.start(time);osc.stop(time+duration+0.03);
+ osc.start(time);osc.stop(time+duration+0.04);
+}
+function lofiBell(freq,time){
+ // Petite clochette boisée, très légère
+ lofiVoice(freq,time,lofiBeatLength*1.65,0.025,'sine',1850);
+ lofiVoice(freq*2,time,lofiBeatLength*0.65,0.007,'sine',2450);
 }
 function scheduleLofiBeat(time,beat){
- const chord=lofiChords[Math.floor(beat/8)%lofiChords.length];
- const step=beat%8;
+ const theme=lofiThemes[Math.floor(beat/32)%lofiThemes.length];
+ const phraseStep=beat%32;
+ const chord=theme.chords[Math.floor(phraseStep/8)];
+ const step=phraseStep%8;
  if(step===0){
-  chord.forEach((freq,i)=>lofiVoice(freq,time,lofiBeatLength*7.7,0.028,'sine'));
+  chord.forEach((n,i)=>{
+   lofiVoice(lofiHz(n),time,lofiBeatLength*7.8,i===0?0.037:0.025,'sine',950);
+  });
  }
- if(step===0||step===4){
-  lofiVoice(chord[0]/2,time,lofiBeatLength*1.9,0.055,'triangle');
+ // Basse chaude en rythme, sans percussion agressive
+ if(step===0||step===4)lofiVoice(lofiHz(chord[0])/2,time,lofiBeatLength*1.9,0.07,'triangle',600);
+ // Arpège calme qui alterne avec la mélodie
+ if(step===2||step===6){
+  const n=chord[step===2?2:1];
+  lofiVoice(lofiHz(n)*2,time,lofiBeatLength*1.15,0.019,'sine',1600);
  }
- const note=lofiNotes[beat%lofiNotes.length];
- if(note)lofiVoice(note,time,lofiBeatLength*0.8,0.023,'sine');
+ const note=theme.melody[phraseStep];
+ if(note)lofiBell(lofiHz(note),time);
+ // Quelques notes décalées façon boîte à musique, sans scintillement visuel
+ if(phraseStep===15||phraseStep===31){
+  lofiVoice(lofiHz(chord[3])*2,time+lofiBeatLength*0.45,lofiBeatLength*0.75,0.012,'sine',1800);
+ }
 }
 function scheduleLofi(){
  if(!lofiContext)return;
- while(lofiNextBeat<lofiContext.currentTime+0.65){
+ while(lofiNextBeat<lofiContext.currentTime+0.55){
   scheduleLofiBeat(lofiNextBeat,lofiBeat);
   lofiNextBeat+=lofiBeatLength;
-  lofiBeat=(lofiBeat+1)%lofiNotes.length;
+  lofiBeat=(lofiBeat+1)%(32*lofiThemes.length);
  }
 }
 function ensureLofi(){
  if(lofiContext)return true;
  const AudioContextClass=window.AudioContext||window.webkitAudioContext;
- if(!AudioContextClass){lofiStatus.textContent="Audio non pris en charge par ce navigateur";return false;}
+ if(!AudioContextClass){lofiStatus.textContent='Audio non pris en charge par ce navigateur';return false;}
  lofiContext=new AudioContextClass();
  lofiMaster=lofiContext.createGain();
  lofiMaster.gain.value=0;
@@ -238,11 +267,11 @@ function syncLofi(){
  if(lofiContext&&lofiMaster){
   const t=lofiContext.currentTime;
   lofiMaster.gain.cancelScheduledValues(t);
-  lofiMaster.gain.setTargetAtTime(shouldPlay?0.55:0,t,0.15);
+  lofiMaster.gain.setTargetAtTime(shouldPlay?0.85:0,t,0.18);
   if(shouldPlay&&!lofiTimer){
    lofiNextBeat=t+0.06;
    scheduleLofi();
-   lofiTimer=setInterval(scheduleLofi,250);
+   lofiTimer=setInterval(scheduleLofi,230);
   }else if(!shouldPlay&&lofiTimer){
    clearInterval(lofiTimer);
    lofiTimer=null;
@@ -250,7 +279,8 @@ function syncLofi(){
  }
  lofiToggle.setAttribute('aria-pressed',String(lofiEnabled));
  lofiToggle.textContent=lofiEnabled?'♫ Couper l’ambiance':'♫ Activer l’ambiance';
- lofiStatus.textContent=!lofiEnabled?'Désactivée':radioIsActive()?'En pause pendant la radio':'Ambiance en cours';
+ const theme=lofiThemes[Math.floor(lofiBeat/32)%lofiThemes.length];
+ lofiStatus.textContent=!lofiEnabled?'Désactivée':radioIsActive()?'En pause pendant la radio':'Ambiance douce · 3 mélodies';
 }
 lofiToggle.addEventListener('click',()=>{
  lofiEnabled=!lofiEnabled;
