@@ -79,7 +79,7 @@ small{display:block;margin-top:18px;color:#bda8c5}
 .clock-zone{font-size:.79rem;color:#ccb9d5;margin-top:7px}
 .clock-period{display:inline-block;margin-top:9px;padding:5px 12px;border-radius:999px;background:#51365f;color:#f9e4fc;font-size:.84rem}
 
-/* Easter egg du smiley DVD, doux et sans effets lumineux */
+/* Œilbert : l’easter egg du smiley DVD, doux et sans effets lumineux */
 #dvd-smiley{position:fixed;left:0;top:0;z-index:30;padding:8px 10px;border:1px solid #c89acb;border-radius:16px;background:#281b37e8;font-size:clamp(1.2rem,3.7vw,1.7rem);white-space:nowrap;line-height:1.3;cursor:pointer;will-change:transform;touch-action:manipulation;box-shadow:0 4px 14px #140e204d}
 #dvd-smiley .dvd-face{display:block;animation:dvd-turn 18s ease-in-out infinite alternate}
 #dvd-smiley:focus-visible{outline:3px solid #ffd6f9;outline-offset:3px}
@@ -88,10 +88,15 @@ small{display:block;margin-top:18px;color:#bda8c5}
 .rain-face{position:absolute;top:-3.5rem;left:var(--rain-x);font-size:var(--rain-size);opacity:0;animation:smiley-fall var(--rain-duration) linear var(--rain-delay) 1 both}
 @keyframes smiley-fall{0%{transform:translate3d(0,-2rem,0) rotate(-12deg);opacity:0}10%{opacity:.75}88%{opacity:.75}100%{transform:translate3d(var(--rain-sway),105vh,0) rotate(12deg);opacity:0}}
 @media(prefers-reduced-motion:reduce){#dvd-smiley .dvd-face,.rain-face{animation:none!important}.rain-face{opacity:.65;top:var(--rain-y)}}
+
+.fun-footer{margin:30px auto 8px;padding:17px 18px;border-top:1px solid #806188;color:#d9c6dd;text-align:center;font-size:.92rem}
+.fun-footer strong{display:block;color:#ffe5fa;margin-bottom:7px}
+.fun-footer p{margin:4px auto;line-height:1.55}
+.fun-footer .footer-judge{font-size:1rem}
 </style>
 </head>
 <body>
-<button id="dvd-smiley" type="button" aria-label="Smiley secret : clique sept fois pour une pluie de smileys" title="👁👄👁 — Clique sept fois !"><span class="dvd-face" aria-hidden="true">👁👄👁</span></button>
+<button id="dvd-smiley" type="button" aria-label="Œilbert, le smiley qui juge : clique sept fois pour une pluie de smileys" title="Œilbert te juge 👁👄👁 — Clique sept fois !"><span class="dvd-face" aria-hidden="true">👁👄👁</span></button>
 <div id="smiley-rain" aria-hidden="true"></div>
 <main>
 <h1>🌸 Le petit bal de Fun 🌸</h1>
@@ -151,6 +156,11 @@ small{display:block;margin-top:18px;color:#bda8c5}
  <ul class="radio-list" id="music-list" aria-label="Playlist des chansons"></ul>
  <p class="radio-note">Le son démarre uniquement quand tu le demandes. Aucune lumière clignotante.</p>
 </section>
+<footer class="fun-footer">
+ <strong>🤝 Fun — une expérience créative entre une humaine et une IA</strong>
+ <p>Un petit laboratoire de curiosités imaginé par Riris et développé en collaboration avec l’intelligence artificielle.</p>
+ <p class="footer-judge">Sous la surveillance permanente d’Œilbert 👁👄👁, le smiley qui juge tout.</p>
+</footer>
 </main>
 <script>
 const clockTime=document.getElementById('clock-time');
