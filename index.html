@@ -76,6 +76,9 @@ small{display:block;margin-top:18px;color:#bda8c5}
 
 .choices{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:18px 0 6px}
 .choices button[aria-pressed="true"]{background:#8a518a;box-shadow:0 0 0 2px #edb2e5 inset}
+.extra-links{display:flex;justify-content:center;margin:2px 0 8px;position:relative;z-index:20}
+.extra-links a{display:inline-block;border:1px solid #a779bd;background:#473251;color:#fff2fa;border-radius:999px;padding:10px 18px;font:inherit;text-decoration:none}
+.extra-links a:hover{background:#60406f}.extra-links a:focus-visible{outline:3px solid #f9c4ed;outline-offset:3px}
 .character[hidden]{display:none!important}
 /* Onglet Bal : Aelysia 2.0 danse sur la musique en cours */
 .scene.scene-bal{height:420px}
@@ -158,6 +161,7 @@ small{display:block;margin-top:18px;color:#bda8c5}
 <button type="button" id="choose-aelysia2" aria-pressed="false">✨ Aelysia 2.0</button>
 <button type="button" id="choose-bal" aria-pressed="false">💃 Bal</button>
 </div>
+<p class="extra-links"><a href="./dodeca.html">💎 Le dodécaèdre (effets &amp; sons)</a></p>
 <div class="scene" id="scene" aria-label="Un petit lapin rose danse doucement">
 <span class="sparkle s1" aria-hidden="true">🌸</span><span class="sparkle s2" aria-hidden="true">✨</span><span class="sparkle s3" aria-hidden="true">💜</span>
 <div class="mochi character" id="mochi"><div class="head"><div class="ear left"></div><div class="ear right"></div><div class="eye left"></div><div class="eye right"></div><div class="blush left"></div><div class="blush right"></div><div class="mouth">ᴗ</div></div><div class="arm left"></div><div class="arm right"></div><div class="body"></div><div class="foot left"></div><div class="foot right"></div><div class="sleep-blanket" aria-hidden="true"></div><div class="sleep-zz" aria-hidden="true">z Z z</div><a class="dream-bubble" href="./jeu.html" aria-label="Découvrir le passage secret dans le rêve de Mochi"><span class="dream-label">Miam… des mochis !</span><span class="dream-mochi strawberry">♥</span><span class="dream-mochi vanilla">✿</span><span class="dream-mochi matcha">✦</span><span class="dream-mochi big">♡</span></a></div>
