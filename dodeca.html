@@ -227,6 +227,11 @@ function cineFx(V,sc,W,H,t){
 
 }
 
+const MASTER=0.5;
+function masterChain(c,out){const bus=c.createGain(),hp=c.createBiquadFilter(),cp=c.createDynamicsCompressor(),mk=c.createGain();
+ hp.type='highpass';hp.frequency.value=85;hp.Q.value=0.7;
+ cp.threshold.value=-20;cp.knee.value=10;cp.ratio.value=14;cp.attack.value=0.003;cp.release.value=0.25;mk.gain.value=0.9;
+ bus.connect(hp);hp.connect(cp);cp.connect(mk);mk.connect(out);return bus}
 let NOSND=false,MUTE=false,SND=null;
 function mkNoise(actx){const len=actx.sampleRate*2,b=actx.createBuffer(1,len,actx.sampleRate),d=b.getChannelData(0);let q=12345;for(let i=0;i<len;i++){q=(q*1664525+1013904223)>>>0;d[i]=(q/4294967296)*2-1}return b}
 function buildSound(actx,dest,t0){
@@ -257,20 +262,20 @@ const rv=actx.createConvolver(),LN=actx.sampleRate*4,ir=actx.createBuffer(2,LN,a
  // crépitement des dragons (plus dense avec le temps)
  for(let k=0;k<150;k++){const ta=12.5+Math.pow(rnd(),0.6)*14.5;burst(ta,0.04,'bandpass',3000+rnd()*3000,3000+rnd()*3000,0.07*(0.3+0.7*Math.min(1,(ta-12)/14)),4)}
  // trou noir : grave profond + souffle montant
- osc('sine',46,30,20.5,36,0.42,5,8);
+ osc('sine',46,30,20.5,36,0.3,5,8);
  {const src=actx.createBufferSource(),fl=actx.createBiquadFilter(),gn=actx.createGain();src.buffer=noise;src.loop=true;fl.type='lowpass';
   fl.frequency.setValueAtTime(200,t0+22);fl.frequency.exponentialRampToValueAtTime(5000,t0+27.5);
   gn.gain.setValueAtTime(0.0001,t0+22);gn.gain.linearRampToValueAtTime(0.22,t0+27.5);gn.gain.linearRampToValueAtTime(0.0001,t0+29.5);
   src.connect(fl);fl.connect(gn);gn.connect(dest);src.start(t0+22);src.stop(t0+29.6)}
  // onde de choc à 28,6 s
- osc('sine',70,26,28.6,34,0.65,0.02,4.5);burst(28.6,3.5,'lowpass',900,150,0.35,1);
+ osc('sine',70,26,28.6,34,0.5,0.02,4.5);burst(28.6,3.5,'lowpass',900,150,0.35,1);
  // ===== ouverture stellaire du trou noir (26 s) puis dissipation =====
  {
   {const src=actx.createBufferSource(),fl=actx.createBiquadFilter(),gn=actx.createGain();src.buffer=noise;src.loop=true;fl.type='highpass';
    fl.frequency.setValueAtTime(500,t0+24.9);fl.frequency.exponentialRampToValueAtTime(9000,t0+26);
    gn.gain.setValueAtTime(0.0001,t0+24.9);gn.gain.exponentialRampToValueAtTime(0.3,t0+25.98);gn.gain.setValueAtTime(0.0001,t0+26.02);
    src.connect(fl);fl.connect(gn);gn.connect(sx);src.start(t0+24.9);src.stop(t0+26.05)}
-  osc('sine',62,22,26,32,0.8,0.01,5.5);burst(26,2.6,'lowpass',1400,90,0.55,1);
+  osc('sine',62,22,26,32,0.55,0.01,5.5);burst(26,2.6,'lowpass',1400,90,0.4,1);
   [880,1318.5,1760].forEach((f,i)=>osc('sine',f,f,26,35,0.012,1.2,6,pan(-0.6+i*0.6)));
   [1,1.5,2,3,4.5].forEach((r,i)=>osc('sine',110*r,110*r,26,36,0.05,0.5,8,pan(i%2?0.6:-0.6)));
   osc('sine',2400,300,29,36.5,0.07,0.1,5,pan(0));osc('sine',3600,450,29.2,36.5,0.04,0.1,5,pan(0.5));
@@ -287,13 +292,13 @@ function sndStart(){
  if(NOSND||MUTE)return;
  try{if(!SND)SND={ctx:new (window.AudioContext||window.webkitAudioContext)()};const c=SND.ctx;c.resume();
   if(SND.bus){const b=SND.bus;b.gain.setTargetAtTime(0,c.currentTime,0.05);setTimeout(()=>{try{b.disconnect()}catch(e){}},500)}
-  const bus=c.createGain(),cp=c.createDynamicsCompressor(),t0=c.currentTime+0.05;bus.gain.setValueAtTime(0.8,t0);bus.gain.setValueAtTime(0.8,t0+38);bus.gain.linearRampToValueAtTime(0.0001,t0+40);
-  bus.connect(cp);cp.connect(c.destination);SND.bus=bus;buildSound(c,bus,t0)}catch(e){}
+  const t0=c.currentTime+0.05,bus=masterChain(c,c.destination);bus.gain.setValueAtTime(MASTER,t0);bus.gain.setValueAtTime(MASTER,t0+38);bus.gain.linearRampToValueAtTime(0.0001,t0+40);
+  SND.bus=bus;buildSound(c,bus,t0)}catch(e){}
 }
 function sndStop(){try{if(SND&&SND.bus){const b=SND.bus;b.gain.setTargetAtTime(0,SND.ctx.currentTime,0.05);SND.bus=null;setTimeout(()=>{try{b.disconnect()}catch(e){}},500)}}catch(e){}}
 async function renderAudioWav(){
- const sr=44100,oc=new OfflineAudioContext(2,sr*40,sr),bus=oc.createGain(),cp=oc.createDynamicsCompressor();
- bus.gain.setValueAtTime(0.8,0);bus.gain.setValueAtTime(0.8,38);bus.gain.linearRampToValueAtTime(0.0001,40);bus.connect(cp);cp.connect(oc.destination);buildSound(oc,bus,0);
+ const sr=44100,oc=new OfflineAudioContext(2,sr*40,sr),bus=masterChain(oc,oc.destination);
+ bus.gain.setValueAtTime(MASTER,0);bus.gain.setValueAtTime(MASTER,38);bus.gain.linearRampToValueAtTime(0.0001,40);buildSound(oc,bus,0);
  const buf=await oc.startRendering(),L=buf.getChannelData(0),R=buf.getChannelData(1),n=L.length,dv=new DataView(new ArrayBuffer(44+n*4));
  const ws=(o,t)=>{for(let i=0;i<t.length;i++)dv.setUint8(o+i,t.charCodeAt(i))};
  ws(0,'RIFF');dv.setUint32(4,36+n*4,true);ws(8,'WAVEfmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,2,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*4,true);dv.setUint16(32,4,true);dv.setUint16(34,16,true);ws(36,'data');dv.setUint32(40,n*4,true);
