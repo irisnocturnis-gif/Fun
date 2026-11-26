@@ -23,7 +23,7 @@ input[type=range]{vertical-align:middle;width:90px}
  <button data-mode="sat" aria-pressed="false">Satellites animés</button>
  <button data-mode="dragon" aria-pressed="false">Dragon</button>
  <button data-mode="cine" aria-pressed="false">Cinématique ▶</button>
- <label>Itérations <input id="iter" type="range" min="5" max="11" value="11"><b id="itv">11</b></label>
+ <label>Itérations <input id="iter" type="range" min="5" max="11" value="8"><b id="itv">11</b></label>
  <button id="auto" aria-pressed="true">Rotation auto</button>
  <button id="pulse" aria-pressed="true">Impulsions</button>
  <button id="snd" aria-pressed="true">Son</button>
@@ -65,7 +65,7 @@ const VDIR=(()=>{const out=[];for(const p of PL){for(let k=0;k<5;k++){const a=ra
 const gl=document.createElement('canvas'),gx=gl.getContext('2d');
 const pent=[];for(let k=0;k<5;k++){const a=rad(-90+72*k);pent.push([T/2+31*Math.cos(a),T/2+31*Math.sin(a)]);}
 
-let ITER=11,DPTS=null,DIT=0;
+let ITER=8,DPTS=null,DIT=0;
 function dragonPts(n){let s=[];for(let i=0;i<n;i++){const r=s.slice().reverse().map(x=>-x);s=s.concat([1],r)}
  let p=[[0,0],[1,0]],a=0,x=1,y=0;for(const tn of s){a+=tn*Math.PI/2;x+=Math.round(Math.cos(a));y+=Math.round(Math.sin(a));p.push([x,y])}
  const E=p[p.length-1],len=Math.hypot(E[0],E[1]),an=Math.atan2(E[1],E[0]),c=Math.cos(-an),sn=Math.sin(-an);
@@ -154,7 +154,7 @@ function draw(t){
  const W=cv.width,H=cv.height;
  CE=null;DG=null;SHX=SHY=0;
  if(mode==='cine'){
-  if(!T0)T0=t;let ct=(t-T0)/1000;if(ct>40){T0=t;ct=0;sndStart()}
+  if(!T0)T0=t;let ct=(t-T0)/1000;if(ct>50){T0=t;ct=0;sndStart()}else if(ct>40){ct=40;if(SND&&SND.chain)sndStop()}
   const sm=smooth,ex=sm(Math.max(0,Math.min(1,(ct-23.5)/6.5))),pk=Math.max(0,Math.min(1,(ct-22)/3.6));
   const hg=sm(Math.max(0,Math.min(1,(ct-20.5)/7))),hf=sm(Math.max(0,Math.min(1,(ct-29)/3)));
   CE={t:ct,ex,pk,hg,hf,glow:(0.35+0.65*Math.min(1,ct/9))*(1+0.9*pk*pk)*(1-ex)};
