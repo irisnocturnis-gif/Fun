@@ -231,6 +231,7 @@ function cineFx(V,sc,W,H,t){
 
 }
 
+const LITE=+(new URLSearchParams(location.search).get('lite')||0);
 const MASTER=0.5, MAKEUP_GAIN=0.9, PHONE_GAIN=0.6, PHONE_KEY='dodeca-phone-mode';
 let NOSND=false,MUTE=false,SND=null,phoneMode=false;
 try{phoneMode=localStorage.getItem(PHONE_KEY)==='1'}catch(e){}
@@ -270,7 +271,7 @@ function buildSound(actx,dest,t0){
   fl.frequency.setValueAtTime(f0,t0+ta);if(f1!==f0)fl.frequency.exponentialRampToValueAtTime(f1,t0+ta+dur);
   gn.gain.setValueAtTime(vol,t0+ta);gn.gain.exponentialRampToValueAtTime(0.0001,t0+ta+dur);
   src.connect(fl);fl.connect(gn);gn.connect(out||dest);src.start(t0+ta,rnd()*1.5);src.stop(t0+ta+dur+0.05)}
-const rv=actx.createConvolver(),LN=actx.sampleRate*4,ir=actx.createBuffer(2,LN,actx.sampleRate);
+const rv=actx.createConvolver(),LN=Math.round(actx.sampleRate*(LITE>=2?1.5:4)),ir=actx.createBuffer(2,LN,actx.sampleRate);
  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<LN;i++)d[i]=(rnd()*2-1)*Math.pow(1-i/LN,2.4)}
  rv.buffer=ir;const wet=actx.createGain();wet.gain.value=0.75;rv.connect(wet);wet.connect(dest);
  const sx=actx.createGain();sx.connect(dest);sx.connect(rv);
@@ -315,7 +316,7 @@ const rv=actx.createConvolver(),LN=actx.sampleRate*4,ir=actx.createBuffer(2,LN,a
 }
 function sndStart(){
  if(NOSND||MUTE)return;
- try{if(!SND)SND={ctx:new (window.AudioContext||window.webkitAudioContext)()};const c=SND.ctx;c.resume();
+ try{if(!SND)SND={ctx:new (window.AudioContext||window.webkitAudioContext)(LITE>=1?{latencyHint:'playback'}:undefined)};const c=SND.ctx;c.resume();
   if(SND.chain){const b=SND.chain.bus;b.gain.setTargetAtTime(0,c.currentTime,0.05);setTimeout(()=>{try{b.disconnect()}catch(e){}},500)}
   const t0=c.currentTime+0.05,chain=masterChain(c,c.destination),{bus}=chain;bus.gain.setValueAtTime(MASTER,t0);bus.gain.setValueAtTime(MASTER,t0+38);bus.gain.linearRampToValueAtTime(0.0001,t0+40);
   SND.chain=chain;buildSound(c,bus,t0)}catch(e){}
