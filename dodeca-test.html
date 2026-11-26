@@ -253,9 +253,11 @@ phoneButton.addEventListener('click',()=>{
 });
 function masterChain(c,out){const bus=c.createGain(),hp=c.createBiquadFilter(),cp=c.createDynamicsCompressor(),mk=c.createGain();
  hp.type='highpass';hp.frequency.value=phoneMode?150:85;hp.Q.value=0.7;
+ const MIX=new URLSearchParams(location.search).get('mix')||'';
  cp.threshold.value=-20;cp.knee.value=10;cp.ratio.value=14;cp.attack.value=0.003;cp.release.value=0.25;
+ if(MIX==='2'){cp.threshold.value=-12;cp.knee.value=24;cp.ratio.value=3;cp.attack.value=0.02;cp.release.value=0.3}
  mk.gain.value=MAKEUP_GAIN*(phoneMode?PHONE_GAIN:1);
- bus.connect(hp);hp.connect(cp);cp.connect(mk);mk.connect(out);return {bus,hp,mk}}
+ bus.connect(hp);if(MIX==='1'){hp.connect(mk)}else{hp.connect(cp);cp.connect(mk)}mk.connect(out);return {bus,hp,mk}}
 function mkNoise(actx){const len=actx.sampleRate*2,b=actx.createBuffer(1,len,actx.sampleRate),d=b.getChannelData(0);let q=12345;for(let i=0;i<len;i++){q=(q*1664525+1013904223)>>>0;d[i]=(q/4294967296)*2-1}return b}
 function buildSound(actx,dest,t0){
  const noise=mkNoise(actx);let sd=777;const rnd=()=>{sd=(sd*1664525+1013904223)>>>0;return sd/4294967296};
