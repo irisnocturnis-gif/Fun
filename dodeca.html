@@ -6,7 +6,10 @@ canvas{display:block;width:100vw;height:100vh;cursor:grab}canvas:active{cursor:g
 button,label,a#retour{background:#2a1c3a;color:#f3e6fb;border:1px solid #6a4a8a;border-radius:999px;padding:7px 13px;font:inherit;cursor:pointer;text-decoration:none}
 #itinfo{position:fixed;right:12px;bottom:12px;background:#2a1c3acc;color:#f3e6fb;border:1px solid #6a4a8a;border-radius:999px;padding:6px 12px;font-size:13px}
 #itv{margin-left:4px;color:#ffd9a8}
-@media(max-width:640px){#itinfo{bottom:46px;right:auto;left:12px;font-size:12px}}
+@media(max-width:640px){
+ #ui{max-height:calc(100dvh - 110px);overflow-y:auto}
+ #itinfo{bottom:46px;right:auto;left:12px;font-size:12px}
+}
 button[aria-pressed="true"]{background:#7a3a7a}
 input[type=range]{vertical-align:middle;width:90px}
 #info{position:fixed;left:12px;bottom:12px;color:#c9b3d6;font-size:13px}
@@ -20,10 +23,11 @@ input[type=range]{vertical-align:middle;width:90px}
  <button data-mode="sat" aria-pressed="false">Satellites animés</button>
  <button data-mode="dragon" aria-pressed="false">Dragon</button>
  <button data-mode="cine" aria-pressed="false">Cinématique ▶</button>
- <label>Itérations <input id="iter" type="range" min="5" max="11" value="11"><b id="itv">11</b></label>
+ <label>Itérations <input id="iter" type="range" min="5" max="11" value="8"><b id="itv">11</b></label>
  <button id="auto" aria-pressed="true">Rotation auto</button>
  <button id="pulse" aria-pressed="true">Impulsions</button>
  <button id="snd" aria-pressed="true">Son</button>
+ <button id="phone" aria-pressed="false">Mode téléphone : désactivé</button>
  <button id="back" aria-pressed="true">Cristal (translucide)</button>
  <button id="flip" aria-pressed="false">Flip (rx, ry)</button>
  <label>Lueur <input id="glow" type="range" min="0" max="150" value="100"></label>
@@ -61,7 +65,7 @@ const VDIR=(()=>{const out=[];for(const p of PL){for(let k=0;k<5;k++){const a=ra
 const gl=document.createElement('canvas'),gx=gl.getContext('2d');
 const pent=[];for(let k=0;k<5;k++){const a=rad(-90+72*k);pent.push([T/2+31*Math.cos(a),T/2+31*Math.sin(a)]);}
 
-let ITER=11,DPTS=null,DIT=0;
+let ITER=8,DPTS=null,DIT=0;
 function dragonPts(n){let s=[];for(let i=0;i<n;i++){const r=s.slice().reverse().map(x=>-x);s=s.concat([1],r)}
  let p=[[0,0],[1,0]],a=0,x=1,y=0;for(const tn of s){a+=tn*Math.PI/2;x+=Math.round(Math.cos(a));y+=Math.round(Math.sin(a));p.push([x,y])}
  const E=p[p.length-1],len=Math.hypot(E[0],E[1]),an=Math.atan2(E[1],E[0]),c=Math.cos(-an),sn=Math.sin(-an);
@@ -150,7 +154,7 @@ function draw(t){
  const W=cv.width,H=cv.height;
  CE=null;DG=null;SHX=SHY=0;
  if(mode==='cine'){
-  if(!T0)T0=t;let ct=(t-T0)/1000;if(ct>40){T0=t;ct=0;sndStart()}
+  if(!T0)T0=t;let ct=(t-T0)/1000;if(ct>50){T0=t;ct=0;sndStart()}else if(ct>40){ct=40;if(SND&&SND.chain)sndStop()}
   const sm=smooth,ex=sm(Math.max(0,Math.min(1,(ct-23.5)/6.5))),pk=Math.max(0,Math.min(1,(ct-22)/3.6));
   const hg=sm(Math.max(0,Math.min(1,(ct-20.5)/7))),hf=sm(Math.max(0,Math.min(1,(ct-29)/3)));
   CE={t:ct,ex,pk,hg,hf,glow:(0.35+0.65*Math.min(1,ct/9))*(1+0.9*pk*pk)*(1-ex)};
@@ -227,12 +231,34 @@ function cineFx(V,sc,W,H,t){
 
 }
 
-const MASTER=0.5;
+const LITE=+(new URLSearchParams(location.search).get('lite')||2);
+const MASTER=0.8, MAKEUP_GAIN=0.9, PHONE_GAIN=0.6, PHONE_KEY='dodeca-phone-mode';
+let NOSND=false,MUTE=false,SND=null,phoneMode=false;
+try{phoneMode=localStorage.getItem(PHONE_KEY)==='1'}catch(e){}
+const phoneButton=document.getElementById('phone');
+function updatePhoneButton(){
+ phoneButton.setAttribute('aria-pressed',String(phoneMode));
+ phoneButton.textContent='Mode téléphone : '+(phoneMode?'activé':'désactivé');
+}
+updatePhoneButton();
+phoneButton.addEventListener('click',()=>{
+ phoneMode=!phoneMode;
+ updatePhoneButton();
+ try{localStorage.setItem(PHONE_KEY,phoneMode?'1':'0')}catch(e){}
+ if(SND&&SND.chain){
+  const {hp,mk}=SND.chain,t=SND.ctx.currentTime;
+  // Ajuste la sortie sans toucher à l’enveloppe de la cinématique.
+  hp.frequency.setTargetAtTime(phoneMode?150:85,t,0.02);
+  mk.gain.setTargetAtTime(MAKEUP_GAIN*(phoneMode?PHONE_GAIN:1),t,0.02);
+ }
+});
 function masterChain(c,out){const bus=c.createGain(),hp=c.createBiquadFilter(),cp=c.createDynamicsCompressor(),mk=c.createGain();
- hp.type='highpass';hp.frequency.value=85;hp.Q.value=0.7;
- cp.threshold.value=-20;cp.knee.value=10;cp.ratio.value=14;cp.attack.value=0.003;cp.release.value=0.25;mk.gain.value=0.9;
- bus.connect(hp);hp.connect(cp);cp.connect(mk);mk.connect(out);return bus}
-let NOSND=false,MUTE=false,SND=null;
+ hp.type='highpass';hp.frequency.value=phoneMode?150:85;hp.Q.value=0.7;
+ const MIX=new URLSearchParams(location.search).get('mix')||'';
+ cp.threshold.value=-20;cp.knee.value=10;cp.ratio.value=14;cp.attack.value=0.003;cp.release.value=0.25;
+ if(MIX==='2'){cp.threshold.value=-12;cp.knee.value=24;cp.ratio.value=3;cp.attack.value=0.02;cp.release.value=0.3}
+ mk.gain.value=MAKEUP_GAIN*(phoneMode?PHONE_GAIN:1);
+ bus.connect(hp);if(MIX==='1'){hp.connect(mk)}else{hp.connect(cp);cp.connect(mk)}mk.connect(out);return {bus,hp,mk}}
 function mkNoise(actx){const len=actx.sampleRate*2,b=actx.createBuffer(1,len,actx.sampleRate),d=b.getChannelData(0);let q=12345;for(let i=0;i<len;i++){q=(q*1664525+1013904223)>>>0;d[i]=(q/4294967296)*2-1}return b}
 function buildSound(actx,dest,t0){
  const noise=mkNoise(actx);let sd=777;const rnd=()=>{sd=(sd*1664525+1013904223)>>>0;return sd/4294967296};
@@ -245,7 +271,7 @@ function buildSound(actx,dest,t0){
   fl.frequency.setValueAtTime(f0,t0+ta);if(f1!==f0)fl.frequency.exponentialRampToValueAtTime(f1,t0+ta+dur);
   gn.gain.setValueAtTime(vol,t0+ta);gn.gain.exponentialRampToValueAtTime(0.0001,t0+ta+dur);
   src.connect(fl);fl.connect(gn);gn.connect(out||dest);src.start(t0+ta,rnd()*1.5);src.stop(t0+ta+dur+0.05)}
-const rv=actx.createConvolver(),LN=actx.sampleRate*4,ir=actx.createBuffer(2,LN,actx.sampleRate);
+const rv=actx.createConvolver(),LN=Math.round(actx.sampleRate*(LITE>=2?1.5:4)),ir=actx.createBuffer(2,LN,actx.sampleRate);
  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<LN;i++)d[i]=(rnd()*2-1)*Math.pow(1-i/LN,2.4)}
  rv.buffer=ir;const wet=actx.createGain();wet.gain.value=0.75;rv.connect(wet);wet.connect(dest);
  const sx=actx.createGain();sx.connect(dest);sx.connect(rv);
@@ -290,14 +316,14 @@ const rv=actx.createConvolver(),LN=actx.sampleRate*4,ir=actx.createBuffer(2,LN,a
 }
 function sndStart(){
  if(NOSND||MUTE)return;
- try{if(!SND)SND={ctx:new (window.AudioContext||window.webkitAudioContext)()};const c=SND.ctx;c.resume();
-  if(SND.bus){const b=SND.bus;b.gain.setTargetAtTime(0,c.currentTime,0.05);setTimeout(()=>{try{b.disconnect()}catch(e){}},500)}
-  const t0=c.currentTime+0.05,bus=masterChain(c,c.destination);bus.gain.setValueAtTime(MASTER,t0);bus.gain.setValueAtTime(MASTER,t0+38);bus.gain.linearRampToValueAtTime(0.0001,t0+40);
-  SND.bus=bus;buildSound(c,bus,t0)}catch(e){}
+ try{if(!SND)SND={ctx:new (window.AudioContext||window.webkitAudioContext)(LITE>=1?{latencyHint:'playback'}:undefined)};const c=SND.ctx;c.resume();
+  if(SND.chain){const b=SND.chain.bus;b.gain.setTargetAtTime(0,c.currentTime,0.05);setTimeout(()=>{try{b.disconnect()}catch(e){}},500)}
+  const t0=c.currentTime+0.05,chain=masterChain(c,c.destination),{bus}=chain;bus.gain.setValueAtTime(MASTER,t0);bus.gain.setValueAtTime(MASTER,t0+38);bus.gain.linearRampToValueAtTime(0.0001,t0+40);
+  SND.chain=chain;buildSound(c,bus,t0)}catch(e){}
 }
-function sndStop(){try{if(SND&&SND.bus){const b=SND.bus;b.gain.setTargetAtTime(0,SND.ctx.currentTime,0.05);SND.bus=null;setTimeout(()=>{try{b.disconnect()}catch(e){}},500)}}catch(e){}}
+function sndStop(){try{if(SND&&SND.chain){const b=SND.chain.bus;b.gain.setTargetAtTime(0,SND.ctx.currentTime,0.05);SND.chain=null;setTimeout(()=>{try{b.disconnect()}catch(e){}},500)}}catch(e){}}
 async function renderAudioWav(){
- const sr=44100,oc=new OfflineAudioContext(2,sr*40,sr),bus=masterChain(oc,oc.destination);
+ const sr=44100,oc=new OfflineAudioContext(2,sr*40,sr),{bus}=masterChain(oc,oc.destination);
  bus.gain.setValueAtTime(MASTER,0);bus.gain.setValueAtTime(MASTER,38);bus.gain.linearRampToValueAtTime(0.0001,40);buildSound(oc,bus,0);
  const buf=await oc.startRendering(),L=buf.getChannelData(0),R=buf.getChannelData(1),n=L.length,dv=new DataView(new ArrayBuffer(44+n*4));
  const ws=(o,t)=>{for(let i=0;i<t.length;i++)dv.setUint8(o+i,t.charCodeAt(i))};

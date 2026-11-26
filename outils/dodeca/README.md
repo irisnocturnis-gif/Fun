@@ -20,7 +20,6 @@ Reporte aussi le changement dans `dodeca_view.py`, sinon la prochaine régénér
 - `dodeca_core_gen.py` : régénère le modèle et les textures (demande `numpy` et `Pillow`).
 - `son_dodeca_lisible.js` : le code du son, découpé en sections commentées (même son que la page de test, pour le lire et le régler).
 
-## Pages de test (non liées depuis le site, en cours de réglage du son)
-- `dodeca-test.html` : mode téléphone (travail de Codex) + variantes `?mix=1`/`?mix=2` (compresseur) et `?lite=1`/`?lite=2` (tampon audio, réverbération courte).
-- `dodeca-lite.html` : version retenue pour l'instant (tampon audio large, réverbération 1,5 s, volume 0,8, pause de 10 s entre deux lectures, dragon à 8 itérations). Ces changements ne sont pas encore dans `dodeca_view.py` ni dans `dodeca.html`.
-
+## État des pages
+- `dodeca.html` : la page publiée. Elle contient le mode téléphone (travail de Codex), le son stable (tampon audio large, réverbération 1,5 s), le volume 0,8, une pause de 10 s entre deux lectures et le dragon à 8 itérations. Elle est générée par `dodeca_view.py`.
+- `dodeca-lite.html` et `dodeca-test.html` : pages de test non liées, gardées pour chercher le son du début. `dodeca-test.html` accepte `?mix=1`/`?mix=2` (compresseur) et `?lite=0`/`?lite=1`/`?lite=2` (tampon audio, réverbération).
