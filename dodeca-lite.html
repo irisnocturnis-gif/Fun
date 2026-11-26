@@ -232,7 +232,7 @@ function cineFx(V,sc,W,H,t){
 }
 
 const LITE=+(new URLSearchParams(location.search).get('lite')||2);
-const MASTER=0.5, MAKEUP_GAIN=0.9, PHONE_GAIN=0.6, PHONE_KEY='dodeca-phone-mode';
+const MASTER=0.8, MAKEUP_GAIN=0.9, PHONE_GAIN=0.6, PHONE_KEY='dodeca-phone-mode';
 let NOSND=false,MUTE=false,SND=null,phoneMode=false;
 try{phoneMode=localStorage.getItem(PHONE_KEY)==='1'}catch(e){}
 const phoneButton=document.getElementById('phone');
