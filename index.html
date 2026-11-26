@@ -811,7 +811,7 @@ function balOnBeat(strength){
  if(bal.beat%8===0&&!balReduced){bal.spin=1;balSpawnSparks(6);}
  else if(bal.beat%4===0)balSpawnSparks(2);
 }
-let balPrev=0;
+let balPrev=0,balLastSound=0;
 function balFrame(ts){
  if(!balActive){balRaf=0;return;}
  balRaf=requestAnimationFrame(balFrame);
@@ -828,6 +828,8 @@ function balFrame(ts){
  if(node){
   const m=balBass(node);bass=m.bass;all=m.all;
   playing=all>0.01;
+  // les silences entre deux notes ne doivent pas faire changer le texte ni arrêter la danse
+  if(playing)balLastSound=now;else if(now-balLastSound<2500)playing=true;
  }else if(label==='radio-blind'){playing=true;}
  bal.source=playing?label:'none';
  if(playing){
